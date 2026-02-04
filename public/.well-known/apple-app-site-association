@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "ZH8H29HA3J.com.davidpark.TOY",
+        "paths": ["/card/*"]
+      },
+      {
+        "appID": "ZH8H29HA3J.com.davidpark.TOY.Clip",
+        "paths": ["/card/*"]
+      }
+    ]
+  }
+}
