@@ -125,10 +125,11 @@ export default async function WatchPage({ params }: PageProps) {
     <main className="min-h-screen bg-toy-background">
       {/* Header */}
       <header className="py-6 text-center">
-        <h1 className="text-2xl font-serif text-toy-text">
-          A video for <span className="text-toy-primary">{card.recipient_name}</span>
+        <h1 className="text-3xl text-toy-text" style={{ fontFamily: 'var(--font-dm-serif), Georgia, serif' }}>
+          Thinking Of You
         </h1>
-        <p className="mt-2 text-toy-text-secondary">{card.title}</p>
+        <p className="mt-2 text-lg text-toy-text" style={{ fontFamily: 'var(--font-dm-serif), Georgia, serif' }}>{card.title}</p>
+        <p className="mt-1 text-toy-text-secondary">A card for {card.recipient_name}</p>
       </header>
 
       {/* Video Player */}
@@ -159,7 +160,7 @@ export default async function WatchPage({ params }: PageProps) {
           Made with{' '}
           <a
             href="https://sendtoycard.com"
-            className="text-toy-primary hover:text-toy-primary-dark transition-colors"
+            className="text-toy-text font-medium hover:underline transition-colors"
           >
             TOY
           </a>

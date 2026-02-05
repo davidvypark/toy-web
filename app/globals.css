@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  /* TOY Brand Colors */
-  --toy-primary: #E8735A;
-  --toy-primary-dark: #D4604A;
-  --toy-background: #FFFBF5;
+  /* TOY Brand Colors - Black & White with Paper Texture */
+  --toy-primary: #000000;
+  --toy-primary-dark: #1a1a1a;
+  --toy-background: #F5F1EB;
   --toy-surface: #FFFFFF;
-  --toy-text: #2D2A26;
-  --toy-text-secondary: #6B6560;
+  --toy-text: #000000;
+  --toy-text-secondary: #555555;
 
   /* System Colors */
   --background: var(--toy-background);

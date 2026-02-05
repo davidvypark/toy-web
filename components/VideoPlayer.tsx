@@ -153,11 +153,6 @@ export function VideoPlayer({ videoUrl, recipientName }: VideoPlayerProps) {
             </svg>
           )}
         </button>
-
-        {/* TOY branding - bottom right */}
-        <div className="absolute bottom-4 right-4 text-white text-sm opacity-60 drop-shadow-md select-none pointer-events-none">
-          Made with TOY
-        </div>
       </div>
     </div>
   )

@@ -46,7 +46,7 @@ export default function NotFound() {
       {/* Footer */}
       <footer className="absolute bottom-8 text-center">
         <p className="text-sm text-toy-text-secondary">
-          <span className="text-toy-primary font-medium">TOY</span> - Thinking Of You
+          <span className="text-toy-text font-medium">TOY</span> - Thinking Of You
         </p>
       </footer>
     </main>
