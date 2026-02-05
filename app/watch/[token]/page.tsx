@@ -34,17 +34,10 @@ async function getCard(shareToken: string): Promise<Card | null> {
     .eq('status', 'published')
     .single()
 
-  if (error) {
-    console.error('Failed to fetch card:', error, 'shareToken:', shareToken)
+  if (error || !data) {
     return null
   }
 
-  if (!data) {
-    console.error('No card found for shareToken:', shareToken)
-    return null
-  }
-
-  console.log('Found card:', data.id, 'video_url:', data.video_url)
   return data as Card
 }
 
@@ -54,24 +47,13 @@ async function getCard(shareToken: string): Promise<Card | null> {
  */
 async function getSignedVideoUrl(videoPath: string): Promise<string | null> {
   const supabase = createServerClient()
-  const cleanPath = videoPath?.trim()
-
-  // Debug: List files in the videos bucket to see what's there
-  const { data: files, error: listError } = await supabase
-    .storage
-    .from('videos')
-    .list('', { limit: 10 })
-
-  console.log('Files in videos bucket:', files?.map(f => f.name), 'error:', listError)
-  console.log('Looking for path:', cleanPath)
 
   const { data, error } = await supabase
     .storage
     .from('videos')
-    .createSignedUrl(cleanPath, 60 * 60) // 1 hour
+    .createSignedUrl(videoPath?.trim(), 60 * 60) // 1 hour
 
   if (error || !data?.signedUrl) {
-    console.error('Failed to create signed URL:', error, 'path:', cleanPath)
     return null
   }
 
