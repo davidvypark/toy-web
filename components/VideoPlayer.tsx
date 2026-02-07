@@ -56,7 +56,7 @@ export function VideoPlayer({ videoUrl, recipientName }: VideoPlayerProps) {
   if (hasError) {
     return (
       <div className="mx-auto max-w-md">
-        <div className="aspect-[9/16] rounded-lg bg-toy-surface flex items-center justify-center shadow-xl">
+        <div className="aspect-[9/16] rounded-2xl bg-toy-surface flex items-center justify-center shadow-xl">
           <div className="text-center p-8">
             <svg
               className="mx-auto h-16 w-16 text-toy-text-secondary opacity-50 mb-4"
@@ -82,7 +82,7 @@ export function VideoPlayer({ videoUrl, recipientName }: VideoPlayerProps) {
 
   return (
     <div className="mx-auto max-w-md">
-      <div className="relative rounded-lg overflow-hidden shadow-xl bg-black">
+      <div className="relative rounded-2xl overflow-hidden shadow-xl bg-black">
         {/* Loading state */}
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-toy-surface z-10">

@@ -4,11 +4,11 @@
     "details": [
       {
         "appID": "ZH8H29HA3J.com.kindauseful.TOY",
-        "paths": ["/watch/*"]
+        "paths": ["/card/*", "/watch/*"]
       },
       {
         "appID": "ZH8H29HA3J.com.kindauseful.TOY.Clip",
-        "paths": ["/watch/*"]
+        "paths": ["/card/*", "/watch/*"]
       }
     ]
   }
