@@ -20,7 +20,7 @@ interface VideoPlayerProps {
  */
 export function VideoPlayer({ videoUrl, recipientName }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const [isMuted, setIsMuted] = useState(true)
+  const [isPlaying, setIsPlaying] = useState(false)
   const [hasError, setHasError] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -44,13 +44,25 @@ export function VideoPlayer({ videoUrl, recipientName }: VideoPlayerProps) {
     }
   }, [])
 
-  // Toggle mute state
-  const toggleMute = () => {
+  // Toggle play/pause
+  const togglePlayPause = () => {
     const video = videoRef.current
-    if (video) {
-      video.muted = !video.muted
-      setIsMuted(video.muted)
+    if (!video) return
+    if (video.paused) {
+      video.play()
+      setIsPlaying(true)
+    } else {
+      video.pause()
+      setIsPlaying(false)
     }
+  }
+
+  // When video ends, reset to beginning and stop
+  const handleEnded = () => {
+    const video = videoRef.current
+    if (!video) return
+    video.currentTime = 0
+    setIsPlaying(false)
   }
 
   if (hasError) {
@@ -104,55 +116,39 @@ export function VideoPlayer({ videoUrl, recipientName }: VideoPlayerProps) {
           </div>
         )}
 
-        {/* Video element */}
-        <video
-          ref={videoRef}
-          src={videoUrl}
-          autoPlay
-          muted
-          playsInline
-          loop
-          className="w-full"
-        />
+        {/* Video element with click to play/pause */}
+        <div onClick={togglePlayPause} className="cursor-pointer">
+          <video
+            ref={videoRef}
+            src={videoUrl}
+            preload="metadata"
+            playsInline
+            onEnded={handleEnded}
+            className="w-full"
+          />
 
-        {/* Unmute button - bottom left */}
-        <button
-          onClick={toggleMute}
-          className="absolute bottom-4 left-4 p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
-          aria-label={isMuted ? 'Unmute video' : 'Mute video'}
-        >
-          {isMuted ? (
-            // Speaker muted icon
-            <svg
-              className="h-6 w-6 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M17.25 9.75 19.5 12m0 0 2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6 4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z"
-              />
-            </svg>
-          ) : (
-            // Speaker unmuted icon
-            <svg
-              className="h-6 w-6 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z"
-              />
-            </svg>
+          {/* Play button overlay when paused */}
+          {!isPlaying && !isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+              <div className="p-4 rounded-full bg-black/50">
+                <svg
+                  className="h-12 w-12 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
+                  />
+                </svg>
+              </div>
+            </div>
           )}
-        </button>
+        </div>
+
       </div>
     </div>
   )
