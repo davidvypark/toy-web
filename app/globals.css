@@ -4,7 +4,7 @@
   /* TOY Brand Colors - Black & White with Paper Texture */
   --toy-primary: #000000;
   --toy-primary-dark: #1a1a1a;
-  --toy-background: #F5F1EB;
+  --toy-background: #FDF8F3;
   --toy-surface: #FFFFFF;
   --toy-text: #000000;
   --toy-text-secondary: #555555;
@@ -47,6 +47,23 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  filter: url(#paper-texture);
+  opacity: 0.4;
+  background: var(--background);
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* Heading styles using DM Serif Display */

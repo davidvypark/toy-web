@@ -69,7 +69,7 @@ export function ShareButtons({ shareUrl, title, recipientName }: ShareButtonsPro
       {canShare && (
         <button
           onClick={handleNativeShare}
-          className="flex items-center gap-2 px-6 py-3 bg-toy-primary text-white rounded-full font-medium hover:bg-toy-primary-dark transition-colors"
+          className="flex items-center gap-2 px-6 py-3 bg-toy-primary text-white rounded-2xl font-medium hover:bg-toy-primary-dark transition-colors"
         >
           <svg
             className="h-5 w-5"
@@ -95,7 +95,7 @@ export function ShareButtons({ shareUrl, title, recipientName }: ShareButtonsPro
           href={twitterUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 px-4 py-2 bg-toy-surface border border-toy-text/10 rounded-full text-toy-text hover:bg-toy-background transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-toy-surface border border-toy-text/10 rounded-2xl text-toy-text hover:bg-toy-background transition-colors"
           aria-label="Share on Twitter"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
@@ -109,7 +109,7 @@ export function ShareButtons({ shareUrl, title, recipientName }: ShareButtonsPro
           href={facebookUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 px-4 py-2 bg-toy-surface border border-toy-text/10 rounded-full text-toy-text hover:bg-toy-background transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-toy-surface border border-toy-text/10 rounded-2xl text-toy-text hover:bg-toy-background transition-colors"
           aria-label="Share on Facebook"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
@@ -123,7 +123,7 @@ export function ShareButtons({ shareUrl, title, recipientName }: ShareButtonsPro
           href={whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 px-4 py-2 bg-toy-surface border border-toy-text/10 rounded-full text-toy-text hover:bg-toy-background transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-toy-surface border border-toy-text/10 rounded-2xl text-toy-text hover:bg-toy-background transition-colors"
           aria-label="Share on WhatsApp"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
@@ -135,7 +135,7 @@ export function ShareButtons({ shareUrl, title, recipientName }: ShareButtonsPro
         {/* Copy Link */}
         <button
           onClick={handleCopyLink}
-          className="flex items-center gap-2 px-4 py-2 bg-toy-surface border border-toy-text/10 rounded-full text-toy-text hover:bg-toy-background transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-toy-surface border border-toy-text/10 rounded-2xl text-toy-text hover:bg-toy-background transition-colors"
           aria-label="Copy link to clipboard"
         >
           {copied ? (

@@ -37,7 +37,7 @@ export default function NotFound() {
         {/* Action */}
         <Link
           href="https://sendtoycard.com"
-          className="inline-flex items-center justify-center px-6 py-3 bg-toy-primary text-white rounded-full font-medium hover:bg-toy-primary-dark transition-colors"
+          className="inline-flex items-center justify-center px-6 py-3 bg-toy-primary text-white rounded-2xl font-medium hover:bg-toy-primary-dark transition-colors"
         >
           Go to TOY
         </Link>
