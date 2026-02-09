@@ -11,6 +11,8 @@ export default function Home() {
         <Link href="/terms" className="hover:underline">Terms of Service</Link>
         <span>&middot;</span>
         <Link href="/privacy" className="hover:underline">Privacy Policy</Link>
+        <span>&middot;</span>
+        <Link href="/contact" className="hover:underline">Contact</Link>
       </footer>
     </div>
   );
