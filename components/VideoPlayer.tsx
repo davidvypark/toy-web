@@ -120,12 +120,14 @@ export function VideoPlayer({ videoUrl, recipientName }: VideoPlayerProps) {
         <div onClick={togglePlayPause} className="cursor-pointer">
           <video
             ref={videoRef}
-            src={videoUrl}
-            preload="metadata"
+            preload="auto"
             playsInline
+            crossOrigin="anonymous"
             onEnded={handleEnded}
             className="w-full"
-          />
+          >
+            <source src={videoUrl} type="video/mp4" />
+          </video>
 
           {/* Play button overlay when paused */}
           {!isPlaying && !isLoading && (
