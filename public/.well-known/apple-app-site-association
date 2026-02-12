@@ -11,5 +11,8 @@
         "paths": ["/card/*", "/watch/*"]
       }
     ]
+  },
+  "appclips": {
+    "apps": ["ZH8H29HA3J.com.kindauseful.TOY.Clip"]
   }
 }
