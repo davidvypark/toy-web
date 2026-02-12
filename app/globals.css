@@ -1,13 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  /* TOY Brand Colors - Black & White with Paper Texture */
-  --toy-primary: #000000;
+  /* TOY Brand Colors */
+  --toy-primary: #1C1917;
   --toy-primary-dark: #1a1a1a;
   --toy-background: #FDF8F3;
   --toy-surface: #FFFFFF;
-  --toy-text: #000000;
-  --toy-text-secondary: #555555;
+  --toy-text: #1C1917;
+  --toy-text-secondary: #78716C;
+  --toy-divider: #E7E5E4;
+
+  /* Grain overlay */
+  --grain-blend: multiply;
+  --grain-opacity: 0.03;
 
   /* System Colors */
   --background: var(--toy-background);
@@ -25,6 +30,7 @@
   --color-toy-surface: var(--toy-surface);
   --color-toy-text: var(--toy-text);
   --color-toy-text-secondary: var(--toy-text-secondary);
+  --color-toy-divider: var(--toy-divider);
 
   /* Fonts */
   --font-sans: var(--font-geist-sans);
@@ -34,22 +40,32 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #1a1917;
-    --foreground: #f5f3f0;
-    --toy-background: #1a1917;
-    --toy-surface: #2d2a26;
-    --toy-text: #f5f3f0;
-    --toy-text-secondary: #a8a29e;
+    --background: #000000;
+    --foreground: #FDF8F3;
+    --toy-primary: #FDF8F3;
+    --toy-background: #000000;
+    --toy-surface: #1C1917;
+    --toy-text: #FDF8F3;
+    --toy-text-secondary: #A8A29E;
+    --toy-divider: #292524;
+    --grain-blend: soft-light;
+    --grain-opacity: 0.04;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
 /* Heading styles using DM Serif Display */
 h1, h2, h3 {
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-dm-serif), Georgia, serif;
+}
+
+/* Noise texture overlay */
+.noise-texture {
+  mix-blend-mode: var(--grain-blend);
+  opacity: var(--grain-opacity);
 }

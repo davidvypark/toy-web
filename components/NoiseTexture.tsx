@@ -31,6 +31,7 @@ export function NoiseTexture() {
   return (
     <div
       aria-hidden="true"
+      className="noise-texture"
       style={{
         position: 'fixed',
         inset: 0,
@@ -38,8 +39,6 @@ export function NoiseTexture() {
         pointerEvents: 'none',
         backgroundImage: `url(${noiseUrl})`,
         backgroundRepeat: 'repeat',
-        mixBlendMode: 'multiply',
-        opacity: 0.03,
       }}
     />
   )
