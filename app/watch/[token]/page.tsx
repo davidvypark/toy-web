@@ -142,9 +142,6 @@ export default async function WatchPage({ params }: PageProps) {
           <h2 className="mb-2 text-lg text-toy-text" style={{ fontFamily: 'var(--font-dm-serif), Georgia, serif' }}>
             Create your own card
           </h2>
-          <p className="mb-6 text-sm text-toy-text-secondary">
-            Record a 7-second video for someone special
-          </p>
           <a href="#" className="inline-block transition-opacity hover:opacity-70">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
