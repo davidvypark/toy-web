@@ -2,7 +2,6 @@ import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase'
 import { VideoPlayer } from '@/components/VideoPlayer'
-import { ShareButtons } from '@/components/ShareButtons'
 
 interface Card {
   id: string
@@ -118,9 +117,6 @@ export default async function WatchPage({ params }: PageProps) {
     notFound()
   }
 
-  // Construct the shareable URL
-  const shareUrl = `https://sendtoycard.com/watch/${token}`
-
   return (
     <main className="min-h-screen bg-toy-background">
       {/* Header */}
@@ -140,17 +136,23 @@ export default async function WatchPage({ params }: PageProps) {
         />
       </section>
 
-      {/* Share Section */}
+      {/* CTA Section */}
       <section className="px-4 pb-12">
-        <div className="mx-auto max-w-2xl">
-          <h2 className="mb-4 text-center text-lg font-serif text-toy-text">
-            Share this video
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="mb-2 text-lg text-toy-text" style={{ fontFamily: 'var(--font-dm-serif), Georgia, serif' }}>
+            Create your own card
           </h2>
-          <ShareButtons
-            shareUrl={shareUrl}
-            title={card.title}
-            recipientName={card.recipient_name}
-          />
+          <p className="mb-6 text-sm text-toy-text-secondary">
+            Record a 7-second video for someone special
+          </p>
+          <a href="#" className="inline-block transition-opacity hover:opacity-70">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
+              alt="Download on the App Store"
+              className="h-[48px] w-auto dark:invert"
+            />
+          </a>
         </div>
       </section>
 
