@@ -1,5 +1,3 @@
-'use client'
-
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -82,18 +80,14 @@ export default function Home() {
 
 function AppStoreBadge() {
   return (
-    <button
-      type="button"
-      onClick={() => alert('Coming soon... (like this week probably)')}
-      className="inline-block cursor-pointer transition-opacity hover:opacity-70"
-    >
+    <a href="https://apps.apple.com/us/app/toy-group-video-cards/id6758913044" className="inline-block transition-opacity hover:opacity-70">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
         alt="Download on the App Store"
         className="h-[60px] w-auto dark:invert"
       />
-    </button>
+    </a>
   )
 }
 

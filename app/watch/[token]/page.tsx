@@ -142,7 +142,7 @@ export default async function WatchPage({ params }: PageProps) {
           <h2 className="mb-2 text-lg text-toy-text" style={{ fontFamily: 'var(--font-dm-serif), Georgia, serif' }}>
             Create your own card
           </h2>
-          <a href="#" className="inline-block transition-opacity hover:opacity-70">
+          <a href="https://apps.apple.com/us/app/toy-group-video-cards/id6758913044" className="inline-block transition-opacity hover:opacity-70">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
