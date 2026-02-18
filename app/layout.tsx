@@ -26,6 +26,7 @@ export const metadata: Metadata = {
     title: "TOY - Thinking Of You",
     description: "Video greeting cards that bring people together",
     siteName: "TOY",
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
   },
 };
 

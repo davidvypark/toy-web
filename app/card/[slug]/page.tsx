@@ -8,6 +8,7 @@ export const metadata: Metadata = {
     title: 'TOY - Thinking Of You',
     description: 'Group video cards for the people who matter',
     siteName: 'TOY',
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
   },
 }
 
