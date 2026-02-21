@@ -29,18 +29,23 @@ export function VideoPlayer({ videoUrl, recipientName }: VideoPlayerProps) {
     const video = videoRef.current
     if (!video) return
 
-    const handleCanPlay = () => setIsLoading(false)
+    const handleLoaded = () => setIsLoading(false)
     const handleError = () => {
       setHasError(true)
       setIsLoading(false)
     }
 
-    video.addEventListener('canplay', handleCanPlay)
+    video.addEventListener('loadedmetadata', handleLoaded)
     video.addEventListener('error', handleError)
 
+    // Fallback: clear loading state after 3s even if no events fire
+    // (mobile browsers may not load anything until user taps play)
+    const timeout = setTimeout(() => setIsLoading(false), 3000)
+
     return () => {
-      video.removeEventListener('canplay', handleCanPlay)
+      video.removeEventListener('loadedmetadata', handleLoaded)
       video.removeEventListener('error', handleError)
+      clearTimeout(timeout)
     }
   }, [])
 
@@ -120,9 +125,8 @@ export function VideoPlayer({ videoUrl, recipientName }: VideoPlayerProps) {
         <div onClick={togglePlayPause} className="cursor-pointer">
           <video
             ref={videoRef}
-            preload="auto"
+            preload="metadata"
             playsInline
-            crossOrigin="anonymous"
             onEnded={handleEnded}
             className="w-full"
           >
