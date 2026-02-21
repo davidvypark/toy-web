@@ -99,7 +99,7 @@ export function VideoPlayer({ videoUrl, recipientName }: VideoPlayerProps) {
 
   return (
     <div className="mx-auto max-w-md">
-      <div className="relative rounded-2xl overflow-hidden shadow-xl bg-black">
+      <div className="relative aspect-[9/16] rounded-2xl overflow-hidden shadow-xl bg-black">
         {/* Loading state */}
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-toy-surface z-10">
