@@ -5,6 +5,7 @@ import { useRef, useState, useEffect } from 'react'
 interface VideoPlayerProps {
   videoUrl: string
   recipientName: string
+  posterUrl?: string
 }
 
 /**
@@ -18,7 +19,7 @@ interface VideoPlayerProps {
  * - Unmute button toggle (bottom left)
  * - Responsive sizing with max-w-2xl constraint
  */
-export function VideoPlayer({ videoUrl, recipientName }: VideoPlayerProps) {
+export function VideoPlayer({ videoUrl, recipientName, posterUrl }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [hasError, setHasError] = useState(false)
@@ -125,6 +126,7 @@ export function VideoPlayer({ videoUrl, recipientName }: VideoPlayerProps) {
         <div onClick={togglePlayPause} className="cursor-pointer">
           <video
             ref={videoRef}
+            poster={posterUrl}
             preload="metadata"
             playsInline
             onEnded={handleEnded}

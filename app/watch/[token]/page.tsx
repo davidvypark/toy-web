@@ -60,6 +60,40 @@ async function getSignedVideoUrl(videoPath: string): Promise<string | null> {
 }
 
 /**
+ * Gets the thumbnail URL for a card by finding the host's clip thumbnail,
+ * falling back to the first clip by order_position.
+ * Thumbnails bucket is public — no signed URL needed.
+ */
+async function getThumbnailUrl(cardId: string, hostId: string): Promise<string | null> {
+  const supabase = createServerClient()
+
+  // Try host's clip first
+  let { data: clip } = await supabase
+    .from('clips')
+    .select('thumbnail_url')
+    .eq('card_id', cardId)
+    .eq('participant_id', hostId)
+    .limit(1)
+    .single()
+
+  // Fallback to first clip by order
+  if (!clip?.thumbnail_url) {
+    const { data: fallback } = await supabase
+      .from('clips')
+      .select('thumbnail_url')
+      .eq('card_id', cardId)
+      .order('order_position', { ascending: true })
+      .limit(1)
+      .single()
+    clip = fallback
+  }
+
+  if (!clip?.thumbnail_url) return null
+
+  return `https://wlsaolscclwarmxzqjqs.supabase.co/storage/v1/object/public/thumbnails/${clip.thumbnail_url}`
+}
+
+/**
  * Generate dynamic metadata for social sharing.
  */
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -111,7 +145,10 @@ export default async function WatchPage({ params }: PageProps) {
     notFound()
   }
 
-  const signedVideoUrl = await getSignedVideoUrl(card.video_url)
+  const [signedVideoUrl, thumbnailUrl] = await Promise.all([
+    getSignedVideoUrl(card.video_url),
+    getThumbnailUrl(card.id, card.host_id),
+  ])
 
   if (!signedVideoUrl) {
     notFound()
@@ -133,6 +170,7 @@ export default async function WatchPage({ params }: PageProps) {
         <VideoPlayer
           videoUrl={signedVideoUrl}
           recipientName={card.recipient_name}
+          posterUrl={thumbnailUrl ?? undefined}
         />
       </section>
 
