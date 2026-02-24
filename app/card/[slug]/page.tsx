@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
   },
   other: {
-    'apple-itms-apps': 'app-clip-bundle-id=com.kindauseful.TOY.Clip, app-id=6758913044',
+    'apple-itunes-app': 'app-id=6758913044, app-clip-bundle-id=com.kindauseful.TOY.Clip, app-clip-display=card',
   },
 }
 
