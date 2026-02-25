@@ -18,8 +18,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const title = info.hostName
-    ? `${info.hostName} invited you to record a video | TOY`
-    : `You're invited to record a video | TOY`
+    ? `${info.hostName} invited you to record a video for ${info.recipientName} | TOY`
+    : `You're invited to record a video for ${info.recipientName} | TOY`
   const description = `Record a 7-second video for ${info.recipientName} — "${info.cardTitle}"`
 
   return {

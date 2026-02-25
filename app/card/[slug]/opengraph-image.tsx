@@ -71,19 +71,19 @@ export default async function CardOgImage({
           {avatarDataUri && (
             <div
               style={{
-                width: 120,
-                height: 120,
+                width: 140,
+                height: 140,
                 borderRadius: '50%',
                 overflow: 'hidden',
-                marginBottom: 32,
+                marginBottom: 36,
                 display: 'flex',
               }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={avatarDataUri}
-                width={120}
-                height={120}
+                width={140}
+                height={140}
                 style={{ objectFit: 'cover' }}
                 alt=""
               />
@@ -94,7 +94,7 @@ export default async function CardOgImage({
           <div
             style={{
               fontFamily: 'DM Serif Display',
-              fontSize: 48,
+              fontSize: 64,
               color: OG_COLORS.text,
               textAlign: 'center',
               lineHeight: 1.2,
@@ -108,9 +108,9 @@ export default async function CardOgImage({
           <div
             style={{
               fontFamily: 'Geist',
-              fontSize: 28,
+              fontSize: 36,
               color: OG_COLORS.textSecondary,
-              marginTop: 16,
+              marginTop: 20,
               display: 'flex',
             }}
           >
@@ -121,9 +121,9 @@ export default async function CardOgImage({
           <div
             style={{
               fontFamily: 'Geist',
-              fontSize: 24,
+              fontSize: 30,
               color: OG_COLORS.textSecondary,
-              marginTop: 12,
+              marginTop: 16,
               display: 'flex',
             }}
           >
@@ -139,8 +139,8 @@ export default async function CardOgImage({
               bottom: 36,
               right: 48,
               fontFamily: 'DM Serif Display',
-              fontSize: 28,
-              color: OG_COLORS.textSecondary,
+              fontSize: 32,
+              color: OG_COLORS.text,
               display: 'flex',
             }}
           >
