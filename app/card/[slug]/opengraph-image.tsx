@@ -132,15 +132,16 @@ export default async function CardOgImage({
               : 'You\u2019re invited to record a video to add to this card.'}
           </div>
 
-          {/* Branding — bottom right */}
+          {/* Branding — top right */}
           <div
             style={{
               position: 'absolute',
-              bottom: 40,
+              top: 40,
               right: 52,
               fontFamily: 'DM Serif Display',
               fontSize: 36,
               color: OG_COLORS.text,
+              opacity: 0.35,
               display: 'flex',
             }}
           >
