@@ -69,3 +69,15 @@ h1, h2, h3 {
   mix-blend-mode: var(--grain-blend);
   opacity: var(--grain-opacity);
 }
+
+/* Gentle bounce animations for arrows */
+@keyframes bounce-gentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@keyframes bounce-gentle-down {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(4px); }
+}
+.animate-bounce-gentle { animation: bounce-gentle 1.5s ease-in-out infinite; }
+.animate-bounce-gentle-down { animation: bounce-gentle-down 1.5s ease-in-out infinite; }
