@@ -25,7 +25,7 @@ let fontsCache: OgFont[] | null = null
 export function getOgFonts(): OgFont[] {
   if (fontsCache) return fontsCache
 
-  const fontsDir = join(process.cwd(), 'assets', 'fonts')
+  const fontsDir = join(process.cwd(), 'public', 'fonts')
   const dmSerif = readFileSync(join(fontsDir, 'DMSerifDisplay-Regular.woff2'))
   const geist = readFileSync(join(fontsDir, 'Geist-Regular.woff2'))
 
