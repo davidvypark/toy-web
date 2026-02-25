@@ -51,7 +51,6 @@ export default async function CardOgImage({
     const cardTitle = truncate(info.cardTitle, 40)
     const recipientName = truncate(info.recipientName, 25)
     const hostName = info.hostName ? truncate(info.hostName, 25) : null
-    const initial = hostName ? hostName[0].toUpperCase() : null
 
     return new ImageResponse(
       (
@@ -68,8 +67,8 @@ export default async function CardOgImage({
             position: 'relative',
           }}
         >
-          {/* Host avatar */}
-          {avatarDataUri ? (
+          {/* Host avatar — only if real photo exists */}
+          {avatarDataUri && (
             <div
               style={{
                 width: 120,
@@ -89,40 +88,20 @@ export default async function CardOgImage({
                 alt=""
               />
             </div>
-          ) : initial ? (
-            <div
-              style={{
-                width: 120,
-                height: 120,
-                borderRadius: '50%',
-                backgroundColor: OG_COLORS.text,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: 32,
-                fontFamily: 'Geist',
-                fontSize: 48,
-                color: OG_COLORS.background,
-              }}
-            >
-              {initial}
-            </div>
-          ) : null}
+          )}
 
-          {/* Invitation text */}
+          {/* Card title */}
           <div
             style={{
               fontFamily: 'DM Serif Display',
-              fontSize: 42,
+              fontSize: 48,
               color: OG_COLORS.text,
               textAlign: 'center',
               lineHeight: 1.2,
               display: 'flex',
             }}
           >
-            {hostName
-              ? `${hostName} invited you to make a clip`
-              : 'You\u2019re invited to make a clip'}
+            {cardTitle}
           </div>
 
           {/* Recipient */}
@@ -135,21 +114,22 @@ export default async function CardOgImage({
               display: 'flex',
             }}
           >
-            for {recipientName}
+            A card for {recipientName}
           </div>
 
-          {/* Card title */}
+          {/* Invitation text */}
           <div
             style={{
               fontFamily: 'Geist',
               fontSize: 24,
               color: OG_COLORS.textSecondary,
               marginTop: 12,
-              fontStyle: 'italic',
               display: 'flex',
             }}
           >
-            {'\u201C'}{cardTitle}{'\u201D'}
+            {hostName
+              ? `${hostName} invited you to record a video to add to this card.`
+              : 'You\u2019re invited to record a video to add to this card.'}
           </div>
 
           {/* Branding — bottom right */}
@@ -159,8 +139,8 @@ export default async function CardOgImage({
               bottom: 36,
               right: 48,
               fontFamily: 'DM Serif Display',
-              fontSize: 20,
-              color: OG_COLORS.divider,
+              fontSize: 28,
+              color: OG_COLORS.textSecondary,
               display: 'flex',
             }}
           >
