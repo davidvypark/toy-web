@@ -94,10 +94,10 @@ export default async function CardOgImage({
           <div
             style={{
               fontFamily: 'DM Serif Display',
-              fontSize: 64,
+              fontSize: 80,
               color: OG_COLORS.text,
               textAlign: 'center',
-              lineHeight: 1.2,
+              lineHeight: 1.1,
               display: 'flex',
             }}
           >
@@ -108,9 +108,9 @@ export default async function CardOgImage({
           <div
             style={{
               fontFamily: 'Geist',
-              fontSize: 36,
+              fontSize: 44,
               color: OG_COLORS.textSecondary,
-              marginTop: 20,
+              marginTop: 24,
               display: 'flex',
             }}
           >
@@ -121,9 +121,9 @@ export default async function CardOgImage({
           <div
             style={{
               fontFamily: 'Geist',
-              fontSize: 30,
+              fontSize: 36,
               color: OG_COLORS.textSecondary,
-              marginTop: 16,
+              marginTop: 20,
               display: 'flex',
             }}
           >
@@ -136,10 +136,10 @@ export default async function CardOgImage({
           <div
             style={{
               position: 'absolute',
-              bottom: 36,
-              right: 48,
+              bottom: 40,
+              right: 52,
               fontFamily: 'DM Serif Display',
-              fontSize: 32,
+              fontSize: 36,
               color: OG_COLORS.text,
               display: 'flex',
             }}
