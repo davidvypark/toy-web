@@ -1,132 +1,11 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { createServerClient } from '@/lib/supabase'
 import { VideoPlayer } from '@/components/VideoPlayer'
-
-interface Card {
-  id: string
-  title: string
-  recipient_name: string
-  video_url: string | null
-  share_token: string
-  status: string
-  host_id: string
-  occasion: string | null
-  published_at: string | null
-}
-
-export interface ClipData {
-  id: string
-  signedVideoUrl: string
-  thumbnailUrl: string | null
-  contributorName: string | null
-  contributorAvatarUrl: string | null
-  durationSeconds: number | null
-  orderPosition: number
-}
+import { getCard, getClips, getSignedVideoUrl, getThumbnailFromClips } from '@/lib/watch-data'
+export type { ClipData } from '@/lib/watch-data'
 
 interface PageProps {
   params: Promise<{ token: string }>
-}
-
-async function getCard(shareToken: string): Promise<Card | null> {
-  const supabase = createServerClient()
-
-  const { data, error } = await supabase
-    .from('cards')
-    .select('*')
-    .eq('share_token', shareToken)
-    .eq('status', 'published')
-    .single()
-
-  if (error || !data) return null
-  return data as Card
-}
-
-async function getSignedVideoUrl(videoPath: string): Promise<string | null> {
-  const supabase = createServerClient()
-
-  const { data, error } = await supabase
-    .storage
-    .from('videos')
-    .createSignedUrl(videoPath?.trim(), 60 * 60)
-
-  if (error || !data?.signedUrl) return null
-  return data.signedUrl
-}
-
-async function getClips(cardId: string): Promise<ClipData[]> {
-  const supabase = createServerClient()
-  const supabaseUrl = process.env.SUPABASE_URL
-
-  // Fetch clips ordered by position
-  const { data: clips, error } = await supabase
-    .from('clips')
-    .select('id, card_id, participant_id, video_url, thumbnail_url, duration_seconds, order_position, contributor_name, status')
-    .eq('card_id', cardId)
-    .eq('status', 'uploaded')
-    .order('order_position', { ascending: true })
-
-  if (error || !clips?.length) return []
-
-  // Collect unique participant IDs for profile lookup
-  const participantIds = [...new Set(clips.map(c => c.participant_id))]
-
-  // Fetch profiles and generate signed URLs in parallel
-  const [profilesResult, ...signedUrls] = await Promise.all([
-    supabase
-      .from('profiles')
-      .select('id, display_name, avatar_url')
-      .in('id', participantIds),
-    ...clips.map(clip =>
-      supabase.storage
-        .from('clips')
-        .createSignedUrl(clip.video_url?.trim(), 60 * 60)
-    ),
-  ])
-
-  const profiles = profilesResult.data ?? []
-  const profileMap = new Map(profiles.map(p => [p.id, p]))
-
-  // Generate signed avatar URLs for profiles that have them
-  const avatarSignedUrls = new Map<string, string>()
-  const profilesWithAvatars = profiles.filter(p => p.avatar_url)
-  if (profilesWithAvatars.length > 0) {
-    const avatarResults = await Promise.all(
-      profilesWithAvatars.map(p =>
-        supabase.storage
-          .from('avatars')
-          .createSignedUrl(p.avatar_url, 60 * 60)
-      )
-    )
-    profilesWithAvatars.forEach((p, i) => {
-      const url = avatarResults[i]?.data?.signedUrl
-      if (url) avatarSignedUrls.set(p.id, url)
-    })
-  }
-
-  return clips.map((clip, i) => {
-    const profile = profileMap.get(clip.participant_id)
-    const signedUrl = signedUrls[i]?.data?.signedUrl
-
-    if (!signedUrl) return null
-
-    return {
-      id: clip.id,
-      signedVideoUrl: signedUrl,
-      thumbnailUrl: clip.thumbnail_url
-        ? `${supabaseUrl}/storage/v1/object/public/thumbnails/${clip.thumbnail_url}`
-        : null,
-      contributorName: clip.contributor_name ?? profile?.display_name ?? null,
-      contributorAvatarUrl: avatarSignedUrls.get(clip.participant_id) ?? null,
-      durationSeconds: clip.duration_seconds,
-      orderPosition: clip.order_position ?? i,
-    }
-  }).filter((c): c is ClipData => c !== null)
-}
-
-function getThumbnailFromClips(clips: ClipData[]): string | null {
-  return clips[0]?.thumbnailUrl ?? null
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -143,10 +22,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const title = `A video for ${card.recipient_name} | TOY`
   const description = card.title
 
-  // Get thumbnail for og:image
-  const clips = await getClips(card.id)
-  const thumbnailUrl = getThumbnailFromClips(clips)
-
   return {
     title,
     description,
@@ -155,13 +30,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       description,
       siteName: 'TOY - Thinking Of You',
       type: 'video.other',
-      ...(thumbnailUrl ? { images: [{ url: thumbnailUrl }] } : {}),
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      ...(thumbnailUrl ? { images: [thumbnailUrl] } : {}),
     },
   }
 }
