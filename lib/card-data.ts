@@ -26,25 +26,10 @@ export async function getCardInfo(shareToken: string): Promise<CardInfo | null> 
     .eq('id', card.host_id)
     .single()
 
-  // Generate signed avatar URL if avatar exists
-  let hostAvatarUrl: string | null = null
-  if (profile?.avatar_url) {
-    const { data: avatarData, error: avatarError } = await supabase
-      .storage
-      .from('avatars')
-      .createSignedUrl(profile.avatar_url, 60 * 60)
-    if (avatarError) {
-      console.error('[card-data] Avatar signed URL failed:', avatarError, 'path:', profile.avatar_url)
-    }
-    hostAvatarUrl = avatarData?.signedUrl ?? null
-  } else {
-    console.log('[card-data] No avatar_url on profile for host_id:', card.host_id)
-  }
-
   return {
     cardTitle: card.title,
     recipientName: card.recipient_name,
     hostName: profile?.display_name ?? null,
-    hostAvatarUrl,
+    hostAvatarUrl: profile?.avatar_url ?? null,
   }
 }
