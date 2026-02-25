@@ -10,7 +10,7 @@
 
 **Milestone Goal:** Both card invite and watch links generate personalized OG images that render with brand fonts on Vercel and display correctly across all major sharing surfaces.
 
-- [ ] **Phase 1: Fix and Deploy** - Fix font format, file tracing, and runtime config; confirm OG images work on Vercel
+- [x] **Phase 1: Fix and Deploy** - Fix font format, file tracing, and runtime config; confirm OG images work on Vercel (completed 2026-02-25)
 - [ ] **Phase 2: Cross-Platform QA** - Verify OG previews render correctly on iMessage, Slack, Twitter, Facebook, and WhatsApp
 
 ## Phase Details
@@ -24,7 +24,7 @@
   2. Hitting `/watch/[token]/opengraph-image` on the Vercel deployment returns a 200 PNG with contributor avatars and brand fonts
   3. Vercel function logs show no ENOENT or wOF2 font errors for either route
   4. Local `npm run build` completes without error and both OG routes render correctly at `localhost`
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 Plans:
 - [ ] 01-01-PLAN.md — Fix font format (TTF), async loading, outputFileTracingIncludes, and update callers
 
@@ -44,5 +44,5 @@ Plans:
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 1. Fix and Deploy | v1.1 | 0/1 | Not started | - |
+| 1. Fix and Deploy | 1/1 | Complete   | 2026-02-25 | - |
 | 2. Cross-Platform QA | v1.1 | 0/? | Not started | - |

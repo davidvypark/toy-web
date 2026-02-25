@@ -9,9 +9,9 @@ Requirements for milestone v1.1 — Dynamic OG Images. Each maps to roadmap phas
 
 ### OG Image Reliability
 
-- [ ] **OG-01**: `/card/[slug]` route generates a personalized OG image with host info on Vercel
-- [ ] **OG-02**: `/watch/[token]` route generates a personalized OG image with contributor avatars on Vercel
-- [ ] **OG-03**: OG images use branded fonts (DM Serif Display, Geist Sans) loaded as TTF
+- [x] **OG-01**: `/card/[slug]` route generates a personalized OG image with host info on Vercel
+- [x] **OG-02**: `/watch/[token]` route generates a personalized OG image with contributor avatars on Vercel
+- [x] **OG-03**: OG images use branded fonts (DM Serif Display, Geist Sans) loaded as TTF
 - [ ] **OG-04**: OG images render correctly when shared on iMessage, Slack, Twitter, Facebook, and WhatsApp
 
 ## Future Requirements
@@ -35,9 +35,9 @@ Requirements for milestone v1.1 — Dynamic OG Images. Each maps to roadmap phas
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| OG-01 | Phase 1 | Pending |
-| OG-02 | Phase 1 | Pending |
-| OG-03 | Phase 1 | Pending |
+| OG-01 | Phase 1 | Complete |
+| OG-02 | Phase 1 | Complete |
+| OG-03 | Phase 1 | Complete |
 | OG-04 | Phase 2 | Pending |
 
 **Coverage:**
