@@ -14,7 +14,7 @@ export async function getCardInfo(shareToken: string): Promise<CardInfo | null> 
     .from('cards')
     .select('title, recipient_name, host_id')
     .eq('share_token', shareToken)
-    .in('status', ['collecting', 'published'])
+    .in('status', ['draft', 'collecting', 'published'])
     .single()
 
   if (error || !card) return null
