@@ -19,13 +19,30 @@ export default async function WatchOgImage({
 }: {
   params: Promise<{ token: string }>
 }) {
+  const { token } = await params
+
+  let fonts
   try {
-    const { token } = await params
-    const fonts = await getOgFonts()
-    const card = await getCard(token)
+    fonts = await getOgFonts()
+  } catch (e) {
+    console.error('[OG watch] Font loading failed:', e)
+    return await staticOgFallback()
+  }
 
-    if (!card) return await staticOgFallback()
+  let card
+  try {
+    card = await getCard(token)
+  } catch (e) {
+    console.error('[OG watch] Data fetch failed:', e)
+    return await staticOgFallback()
+  }
 
+  if (!card) {
+    console.error('[OG watch] No card found for token:', token)
+    return await staticOgFallback()
+  }
+
+  try {
     const { totalPeople, contributors } = await getClipContributors(card.id)
 
     // Fetch up to 5 avatars as data URIs (only those with avatar URLs)
@@ -177,7 +194,7 @@ export default async function WatchOgImage({
       { ...size, fonts }
     )
   } catch (e) {
-    console.error('Watch OG image generation failed:', e)
+    console.error('[OG watch] Render failed:', e)
     return await staticOgFallback()
   }
 }

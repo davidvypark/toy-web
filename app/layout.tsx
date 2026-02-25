@@ -20,6 +20,7 @@ const dmSerifDisplay = DM_Serif_Display({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://sendtoycard.com'),
   title: "TOY - Thinking Of You",
   description: "Video greeting cards that bring people together. Create and share heartfelt video messages with friends and family.",
   openGraph: {

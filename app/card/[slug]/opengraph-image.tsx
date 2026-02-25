@@ -19,13 +19,30 @@ export default async function CardOgImage({
 }: {
   params: Promise<{ slug: string }>
 }) {
+  const { slug } = await params
+
+  let fonts
   try {
-    const { slug } = await params
-    const fonts = await getOgFonts()
-    const info = await getCardInfo(slug)
+    fonts = await getOgFonts()
+  } catch (e) {
+    console.error('[OG card] Font loading failed:', e)
+    return await staticOgFallback()
+  }
 
-    if (!info) return await staticOgFallback()
+  let info
+  try {
+    info = await getCardInfo(slug)
+  } catch (e) {
+    console.error('[OG card] Data fetch failed:', e)
+    return await staticOgFallback()
+  }
 
+  if (!info) {
+    console.error('[OG card] No card found for slug:', slug)
+    return await staticOgFallback()
+  }
+
+  try {
     let avatarDataUri: string | null = null
     if (info.hostAvatarUrl) {
       avatarDataUri = await fetchAvatarAsDataUri(info.hostAvatarUrl)
@@ -154,7 +171,7 @@ export default async function CardOgImage({
       { ...size, fonts }
     )
   } catch (e) {
-    console.error('Card OG image generation failed:', e)
+    console.error('[OG card] Render failed:', e)
     return await staticOgFallback()
   }
 }
