@@ -1,6 +1,7 @@
 import { createServerClient } from '@/lib/supabase'
 
 export interface CardInfo {
+  cardId: string
   cardTitle: string
   recipientName: string
   hostName: string | null
@@ -12,7 +13,7 @@ export async function getCardInfo(shareToken: string): Promise<CardInfo | null> 
 
   const { data: card, error } = await supabase
     .from('cards')
-    .select('title, recipient_name, host_id')
+    .select('id, title, recipient_name, host_id')
     .eq('share_token', shareToken)
     .in('status', ['draft', 'collecting', 'published'])
     .single()
@@ -27,6 +28,7 @@ export async function getCardInfo(shareToken: string): Promise<CardInfo | null> 
     .single()
 
   return {
+    cardId: card.id,
     cardTitle: card.title,
     recipientName: card.recipient_name,
     hostName: profile?.display_name ?? null,

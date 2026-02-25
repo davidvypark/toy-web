@@ -1,8 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { RecordFlow } from './record/RecordFlow'
 
 interface CardPageClientProps {
+  cardId?: string
+  shareToken?: string
   cardTitle?: string
   recipientName?: string
   hostName?: string | null
@@ -28,22 +31,46 @@ function isInAppBrowser(): boolean {
   return IN_APP_BROWSER_PATTERNS.some(pattern => ua.includes(pattern))
 }
 
-export function CardPageClient({ cardTitle, recipientName, hostName, hostAvatarUrl }: CardPageClientProps) {
+function isAndroid(): boolean {
+  if (typeof navigator === 'undefined') return false
+  return /Android/i.test(navigator.userAgent)
+}
+
+export function CardPageClient({ cardId, shareToken, cardTitle, recipientName, hostName, hostAvatarUrl }: CardPageClientProps) {
   const [inAppBrowser, setInAppBrowser] = useState(false)
+  const [android, setAndroid] = useState(false)
 
   useEffect(() => {
     setInAppBrowser(isInAppBrowser())
+    setAndroid(isAndroid())
   }, [])
+
+  // Android users get the web recording flow
+  if (android && !inAppBrowser && cardId && shareToken) {
+    return (
+      <RecordFlow
+        shareToken={shareToken}
+        cardTitle={cardTitle}
+        recipientName={recipientName}
+        hostName={hostName}
+        hostAvatarUrl={hostAvatarUrl}
+      />
+    )
+  }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-toy-background px-6 py-12 text-center">
       {/* In-app browser warning */}
       {inAppBrowser && (
         <div className="mb-8 rounded-xl bg-toy-surface border border-toy-divider px-6 py-4 max-w-xs">
-          <p className="text-sm font-medium text-toy-text">Open in Safari to continue</p>
+          <p className="text-sm font-medium text-toy-text">
+            {android ? 'Open in Chrome to continue' : 'Open in Safari to continue'}
+          </p>
           <p className="mt-1 text-xs text-toy-text-secondary">
             Tap the <span className="font-semibold">&hellip;</span> menu, then{' '}
-            <span className="font-semibold">&ldquo;Open in Safari&rdquo;</span>
+            <span className="font-semibold">
+              {android ? '\u201COpen in Chrome\u201D' : '\u201COpen in Safari\u201D'}
+            </span>
           </p>
         </div>
       )}

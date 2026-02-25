@@ -42,6 +42,8 @@ export default async function CardPage({ params }: PageProps) {
 
   return (
     <CardPageClient
+      cardId={info?.cardId}
+      shareToken={slug}
       cardTitle={info?.cardTitle}
       recipientName={info?.recipientName}
       hostName={info?.hostName}

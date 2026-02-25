@@ -81,10 +81,10 @@ export default async function WatchOgImage({
           <div
             style={{
               fontFamily: 'DM Serif Display',
-              fontSize: 48,
+              fontSize: 72,
               color: OG_COLORS.text,
               textAlign: 'center',
-              lineHeight: 1.2,
+              lineHeight: 1.1,
               display: 'flex',
             }}
           >
@@ -95,9 +95,9 @@ export default async function WatchOgImage({
           <div
             style={{
               fontFamily: 'Geist',
-              fontSize: 28,
+              fontSize: 40,
               color: OG_COLORS.textSecondary,
-              marginTop: 12,
+              marginTop: 20,
               display: 'flex',
             }}
           >
@@ -118,20 +118,20 @@ export default async function WatchOgImage({
                 <div
                   key={i}
                   style={{
-                    width: 72,
-                    height: 72,
+                    width: 100,
+                    height: 100,
                     borderRadius: '50%',
                     border: '3px solid #FFFFFF',
                     overflow: 'hidden',
-                    marginLeft: i === 0 ? 0 : -16,
+                    marginLeft: i === 0 ? 0 : -20,
                     display: 'flex',
                   }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={uri}
-                    width={72}
-                    height={72}
+                    width={100}
+                    height={100}
                     style={{ objectFit: 'cover' }}
                     alt=""
                   />
@@ -140,17 +140,17 @@ export default async function WatchOgImage({
               {remainingCount > 0 && (
                 <div
                   style={{
-                    width: 72,
-                    height: 72,
+                    width: 100,
+                    height: 100,
                     borderRadius: '50%',
                     border: '3px solid #FFFFFF',
                     backgroundColor: OG_COLORS.divider,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    marginLeft: -16,
+                    marginLeft: -20,
                     fontFamily: 'Geist',
-                    fontSize: 24,
+                    fontSize: 32,
                     color: OG_COLORS.textSecondary,
                   }}
                 >
@@ -165,7 +165,7 @@ export default async function WatchOgImage({
             <div
               style={{
                 fontFamily: 'Geist',
-                fontSize: 22,
+                fontSize: 32,
                 color: OG_COLORS.textSecondary,
                 marginTop: 16,
                 display: 'flex',
@@ -175,15 +175,16 @@ export default async function WatchOgImage({
             </div>
           )}
 
-          {/* Branding — bottom right */}
+          {/* Branding — top right */}
           <div
             style={{
               position: 'absolute',
-              bottom: 36,
-              right: 48,
+              top: 40,
+              right: 52,
               fontFamily: 'DM Serif Display',
-              fontSize: 20,
-              color: OG_COLORS.divider,
+              fontSize: 36,
+              color: OG_COLORS.text,
+              opacity: 0.35,
               display: 'flex',
             }}
           >
