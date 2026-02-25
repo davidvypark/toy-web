@@ -17,31 +17,46 @@ export const OG_COLORS = {
   divider: '#E7E5E4',
 } as const
 
-async function loadGoogleFont(family: string, weight: number): Promise<ArrayBuffer> {
-  const url = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}:wght@${weight}&display=swap`
-  const css = await fetch(url, {
-    headers: {
-      'User-Agent':
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    },
-  }).then((r) => r.text())
+async function loadGoogleFont(family: string, weight: number): Promise<ArrayBuffer | null> {
+  try {
+    const url = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}:wght@${weight}&display=swap`
+    const css = await fetch(url, {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      },
+    }).then((r) => r.text())
 
-  const match = css.match(/src:\s*url\(([^)]+)\)\s*format\('woff2'\)/)
-  if (!match?.[1]) throw new Error(`Failed to load font: ${family}`)
+    const match = css.match(/src:\s*url\(([^)]+)\)\s*format\('woff2'\)/)
+    if (!match?.[1]) return null
 
-  return fetch(match[1]).then((r) => r.arrayBuffer())
+    return await fetch(match[1]).then((r) => r.arrayBuffer())
+  } catch {
+    return null
+  }
 }
 
-// Module-level promises — cached across requests in the same worker
-const dmSerifFont = loadGoogleFont('DM Serif Display', 400)
-const geistFont = loadGoogleFont('Geist', 400)
+// Lazy-loaded, retries on failure (not cached as rejected promise)
+let fontsCache: OgFont[] | null = null
 
 export async function getOgFonts(): Promise<OgFont[]> {
-  const [dmSerif, geist] = await Promise.all([dmSerifFont, geistFont])
-  return [
-    { name: 'DM Serif Display', data: dmSerif, weight: 400, style: 'normal' as const },
-    { name: 'Geist', data: geist, weight: 400, style: 'normal' as const },
-  ]
+  if (fontsCache) return fontsCache
+
+  try {
+    const [dmSerif, geist] = await Promise.all([
+      loadGoogleFont('DM Serif Display', 400),
+      loadGoogleFont('Geist', 400),
+    ])
+
+    const fonts: OgFont[] = []
+    if (dmSerif) fonts.push({ name: 'DM Serif Display', data: dmSerif, weight: 400, style: 'normal' as const })
+    if (geist) fonts.push({ name: 'Geist', data: geist, weight: 400, style: 'normal' as const })
+
+    if (fonts.length > 0) fontsCache = fonts
+    return fonts
+  } catch {
+    return []
+  }
 }
 
 export async function fetchAvatarAsDataUri(
