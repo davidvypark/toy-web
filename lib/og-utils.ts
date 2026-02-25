@@ -1,5 +1,5 @@
-import { readFileSync } from 'fs'
-import { join } from 'path'
+import { readFile } from 'node:fs/promises'
+import { join } from 'node:path'
 
 type FontWeight = 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900
 
@@ -20,25 +20,22 @@ export const OG_COLORS = {
   divider: '#E7E5E4',
 } as const
 
-let fontsCache: OgFont[] | null = null
-
-export function getOgFonts(): OgFont[] {
-  if (fontsCache) return fontsCache
-
+export async function getOgFonts(): Promise<OgFont[]> {
   const fontsDir = join(process.cwd(), 'public', 'fonts')
-  const dmSerif = readFileSync(join(fontsDir, 'DMSerifDisplay-Regular.woff2'))
-  const geist = readFileSync(join(fontsDir, 'Geist-Regular.woff2'))
+  const [dmSerif, geist] = await Promise.all([
+    readFile(join(fontsDir, 'DMSerifDisplay-Regular.ttf')),
+    readFile(join(fontsDir, 'Geist-Regular.ttf')),
+  ])
 
-  fontsCache = [
-    { name: 'DM Serif Display', data: dmSerif.buffer as ArrayBuffer, weight: 400, style: 'normal' as const },
-    { name: 'Geist', data: geist.buffer as ArrayBuffer, weight: 400, style: 'normal' as const },
+  return [
+    { name: 'DM Serif Display', data: dmSerif as unknown as ArrayBuffer, weight: 400, style: 'normal' as const },
+    { name: 'Geist', data: geist as unknown as ArrayBuffer, weight: 400, style: 'normal' as const },
   ]
-  return fontsCache
 }
 
 /** Returns the static og-image.png as a Response */
-export function staticOgFallback(): Response {
-  const imageBuffer = readFileSync(join(process.cwd(), 'public', 'og-image.png'))
+export async function staticOgFallback(): Promise<Response> {
+  const imageBuffer = await readFile(join(process.cwd(), 'public', 'og-image.png'))
   return new Response(imageBuffer, {
     headers: { 'Content-Type': 'image/png' },
   })

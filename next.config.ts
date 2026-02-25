@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  outputFileTracingIncludes: {
+    '/card/[slug]': ['./public/fonts/**/*'],
+    '/watch/[token]': ['./public/fonts/**/*'],
+  },
   async redirects() {
     return [
       {
