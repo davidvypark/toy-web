@@ -1,3 +1,6 @@
+import { readFileSync } from 'fs'
+import { join } from 'path'
+
 type FontWeight = 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900
 
 interface OgFont {
@@ -17,46 +20,28 @@ export const OG_COLORS = {
   divider: '#E7E5E4',
 } as const
 
-async function loadGoogleFont(family: string, weight: number): Promise<ArrayBuffer | null> {
-  try {
-    const url = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}:wght@${weight}&display=swap`
-    const css = await fetch(url, {
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      },
-    }).then((r) => r.text())
-
-    const match = css.match(/src:\s*url\(([^)]+)\)\s*format\('woff2'\)/)
-    if (!match?.[1]) return null
-
-    return await fetch(match[1]).then((r) => r.arrayBuffer())
-  } catch {
-    return null
-  }
-}
-
-// Lazy-loaded, retries on failure (not cached as rejected promise)
 let fontsCache: OgFont[] | null = null
 
-export async function getOgFonts(): Promise<OgFont[]> {
+export function getOgFonts(): OgFont[] {
   if (fontsCache) return fontsCache
 
-  try {
-    const [dmSerif, geist] = await Promise.all([
-      loadGoogleFont('DM Serif Display', 400),
-      loadGoogleFont('Geist', 400),
-    ])
+  const fontsDir = join(process.cwd(), 'assets', 'fonts')
+  const dmSerif = readFileSync(join(fontsDir, 'DMSerifDisplay-Regular.woff2'))
+  const geist = readFileSync(join(fontsDir, 'Geist-Regular.woff2'))
 
-    const fonts: OgFont[] = []
-    if (dmSerif) fonts.push({ name: 'DM Serif Display', data: dmSerif, weight: 400, style: 'normal' as const })
-    if (geist) fonts.push({ name: 'Geist', data: geist, weight: 400, style: 'normal' as const })
+  fontsCache = [
+    { name: 'DM Serif Display', data: dmSerif.buffer as ArrayBuffer, weight: 400, style: 'normal' as const },
+    { name: 'Geist', data: geist.buffer as ArrayBuffer, weight: 400, style: 'normal' as const },
+  ]
+  return fontsCache
+}
 
-    if (fonts.length > 0) fontsCache = fonts
-    return fonts
-  } catch {
-    return []
-  }
+/** Returns the static og-image.png as a Response */
+export function staticOgFallback(): Response {
+  const imageBuffer = readFileSync(join(process.cwd(), 'public', 'og-image.png'))
+  return new Response(imageBuffer, {
+    headers: { 'Content-Type': 'image/png' },
+  })
 }
 
 export async function fetchAvatarAsDataUri(

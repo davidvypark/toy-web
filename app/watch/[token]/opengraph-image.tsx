@@ -3,6 +3,7 @@ import { getCard, getClipContributors } from '@/lib/watch-data'
 import {
   getOgFonts,
   fetchAvatarAsDataUri,
+  staticOgFallback,
   OG_COLORS,
   OG_SIZE,
   truncate,
@@ -13,28 +14,6 @@ export const size = OG_SIZE
 export const contentType = 'image/png'
 export const revalidate = 3600
 
-function fallback() {
-  return new ImageResponse(
-    (
-      <div
-        style={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: OG_COLORS.background,
-          fontSize: 48,
-          color: OG_COLORS.text,
-        }}
-      >
-        Thinking of You
-      </div>
-    ),
-    { ...size }
-  )
-}
-
 export default async function WatchOgImage({
   params,
 }: {
@@ -42,9 +21,10 @@ export default async function WatchOgImage({
 }) {
   try {
     const { token } = await params
-    const [card, fonts] = await Promise.all([getCard(token), getOgFonts()])
+    const fonts = getOgFonts()
+    const card = await getCard(token)
 
-    if (!card) return fallback()
+    if (!card) return staticOgFallback()
 
     const { totalPeople, contributors } = await getClipContributors(card.id)
 
@@ -196,7 +176,8 @@ export default async function WatchOgImage({
       ),
       { ...size, fonts }
     )
-  } catch {
-    return fallback()
+  } catch (e) {
+    console.error('Watch OG image generation failed:', e)
+    return staticOgFallback()
   }
 }
