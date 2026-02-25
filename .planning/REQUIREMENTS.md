@@ -35,16 +35,16 @@ Requirements for milestone v1.1 — Dynamic OG Images. Each maps to roadmap phas
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| OG-01 | — | Pending |
-| OG-02 | — | Pending |
-| OG-03 | — | Pending |
-| OG-04 | — | Pending |
+| OG-01 | Phase 1 | Pending |
+| OG-02 | Phase 1 | Pending |
+| OG-03 | Phase 1 | Pending |
+| OG-04 | Phase 2 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 4 total
-- Mapped to phases: 0
-- Unmapped: 4 ⚠️
+- Mapped to phases: 4
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-02-25*
-*Last updated: 2026-02-25 after initial definition*
+*Last updated: 2026-02-25 after roadmap creation*
