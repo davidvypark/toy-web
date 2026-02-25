@@ -21,10 +21,10 @@ export default async function WatchOgImage({
 }) {
   try {
     const { token } = await params
-    const fonts = getOgFonts()
+    const fonts = await getOgFonts()
     const card = await getCard(token)
 
-    if (!card) return staticOgFallback()
+    if (!card) return await staticOgFallback()
 
     const { totalPeople, contributors } = await getClipContributors(card.id)
 
@@ -178,6 +178,6 @@ export default async function WatchOgImage({
     )
   } catch (e) {
     console.error('Watch OG image generation failed:', e)
-    return staticOgFallback()
+    return await staticOgFallback()
   }
 }

@@ -21,10 +21,10 @@ export default async function CardOgImage({
 }) {
   try {
     const { slug } = await params
-    const fonts = getOgFonts()
+    const fonts = await getOgFonts()
     const info = await getCardInfo(slug)
 
-    if (!info) return staticOgFallback()
+    if (!info) return await staticOgFallback()
 
     let avatarDataUri: string | null = null
     if (info.hostAvatarUrl) {
@@ -155,6 +155,6 @@ export default async function CardOgImage({
     )
   } catch (e) {
     console.error('Card OG image generation failed:', e)
-    return staticOgFallback()
+    return await staticOgFallback()
   }
 }
