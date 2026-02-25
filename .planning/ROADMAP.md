@@ -24,7 +24,9 @@
   2. Hitting `/watch/[token]/opengraph-image` on the Vercel deployment returns a 200 PNG with contributor avatars and brand fonts
   3. Vercel function logs show no ENOENT or wOF2 font errors for either route
   4. Local `npm run build` completes without error and both OG routes render correctly at `localhost`
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 01-01-PLAN.md — Fix font format (TTF), async loading, outputFileTracingIncludes, and update callers
 
 ### Phase 2: Cross-Platform QA
 **Goal**: OG image previews display correctly on every sharing surface the app targets
@@ -42,5 +44,5 @@
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 1. Fix and Deploy | v1.1 | 0/? | Not started | - |
+| 1. Fix and Deploy | v1.1 | 0/1 | Not started | - |
 | 2. Cross-Platform QA | v1.1 | 0/? | Not started | - |
