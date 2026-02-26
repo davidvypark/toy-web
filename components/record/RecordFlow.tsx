@@ -47,33 +47,133 @@ export function RecordFlow({
     setUploadError(null)
 
     try {
-      // Sign in anonymously to get a real auth.users ID
-      // (mirrors the iOS App Clip pattern)
       const supabase = createBrowserClient()
+
+      // Step 1: Anonymous auth
       const { data: authData, error: authError } = await supabase.auth.signInAnonymously()
       if (authError || !authData.session) {
         throw new Error('Authentication failed')
       }
+      const userId = authData.session.user.id
 
-      const formData = new FormData()
-      formData.append('video', videoBlob, 'clip.webm')
-      formData.append('shareToken', shareToken)
-      formData.append('contributorName', name)
-      if (avatar) {
-        formData.append('avatar', avatar)
+      // Step 2: Fetch card & join as participant
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: card, error: cardError } = await (supabase.from('cards') as any)
+        .select('*')
+        .eq('share_token', shareToken)
+        .single() as { data: any; error: any }
+
+      if (cardError || !card) {
+        throw new Error('Card not found or no longer accepting clips')
       }
 
-      const response = await fetch('/api/record', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${authData.session.access_token}`,
-        },
-        body: formData,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from('participants') as any).insert({
+        card_id: card.id,
+        user_id: userId,
+        invite_token: crypto.randomUUID(),
+        status: 'viewed',
       })
 
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}))
-        throw new Error(data.error || 'Upload failed')
+      // Step 3: Get video duration
+      const durationVideo = document.createElement('video')
+      durationVideo.src = URL.createObjectURL(videoBlob)
+      await new Promise(resolve => { durationVideo.onloadedmetadata = resolve })
+      const duration = Math.round(durationVideo.duration * 10) / 10
+      URL.revokeObjectURL(durationVideo.src)
+
+      // Step 4: Upload video to clips bucket
+      const clipId = crypto.randomUUID()
+      const ext = videoBlob.type.includes('mp4') ? 'mov' : 'webm'
+
+      const { error: videoUploadError } = await supabase.storage
+        .from('clips')
+        .upload(`${clipId}.${ext}`, videoBlob, {
+          contentType: videoBlob.type,
+          cacheControl: '2592000',
+        })
+
+      if (videoUploadError) {
+        throw new Error('Failed to upload video')
+      }
+
+      // Step 5: Generate & upload thumbnail
+      const thumbVideo = document.createElement('video')
+      thumbVideo.src = URL.createObjectURL(videoBlob)
+      await new Promise(r => { thumbVideo.onloadeddata = r })
+      thumbVideo.currentTime = Math.min(1.5, duration / 2)
+      await new Promise(r => { thumbVideo.onseeked = r })
+      const canvas = document.createElement('canvas')
+      canvas.width = 150
+      canvas.height = 200
+      canvas.getContext('2d')!.drawImage(thumbVideo, 0, 0, 150, 200)
+      URL.revokeObjectURL(thumbVideo.src)
+      const thumbnailBlob = await new Promise<Blob>(r =>
+        canvas.toBlob(b => r(b!), 'image/jpeg', 0.7)
+      )
+
+      await supabase.storage
+        .from('thumbnails')
+        .upload(`${clipId}.jpg`, thumbnailBlob, {
+          contentType: 'image/jpeg',
+          cacheControl: '2592000',
+        })
+
+      // Step 6: Get next order position & insert clip record
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: lastClip } = await (supabase.from('clips') as any)
+        .select('order_position')
+        .eq('card_id', card.id)
+        .order('order_position', { ascending: false })
+        .limit(1)
+        .single() as { data: any }
+
+      const nextPosition = Math.max((lastClip?.order_position ?? 0) + 1, 1)
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: clipError } = await (supabase.from('clips') as any).insert({
+        card_id: card.id,
+        participant_id: userId,
+        video_url: `${clipId}.${ext}`,
+        thumbnail_url: `${clipId}.jpg`,
+        duration_seconds: duration,
+        order_position: nextPosition,
+        status: 'uploaded',
+      })
+
+      if (clipError) {
+        throw new Error('Failed to save clip')
+      }
+
+      // Step 7: Update participant status & profile
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from('participants') as any)
+        .update({ status: 'submitted', submitted_at: new Date().toISOString() })
+        .eq('card_id', card.id)
+        .eq('user_id', userId)
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from('profiles') as any)
+        .update({ display_name: name })
+        .eq('id', userId)
+
+      // Avatar upload (if provided)
+      if (avatar) {
+        await supabase.storage
+          .from('avatars')
+          .upload(`${userId}/avatar.jpg`, avatar, {
+            contentType: 'image/jpeg',
+            upsert: true,
+          })
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(`${userId}/avatar.jpg`)
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase.from('profiles') as any)
+          .update({ avatar_url: publicUrl })
+          .eq('id', userId)
       }
 
       setStep('done')
@@ -214,8 +314,18 @@ export function RecordFlow({
           Clip Submitted!
         </h2>
 
-        <p className="text-toy-text-secondary max-w-xs">
-          Your video message has been added to the card. The recipient will love it!
+        <p className="text-toy-text-secondary max-w-xs mb-8">
+          Your video message has been added to the card.
+        </p>
+
+        <a
+          href="https://apps.apple.com/us/app/toy-group-video-cards/id6758913044"
+          className="w-full max-w-xs px-6 py-3.5 bg-toy-primary text-white dark:text-black rounded-2xl font-medium transition-colors hover:bg-toy-primary-dark text-center block"
+        >
+          Download the App
+        </a>
+        <p className="text-toy-text-secondary text-sm mt-3 max-w-xs">
+          Get the full experience and watch the final video
         </p>
       </div>
     )

@@ -31,8 +31,8 @@ export function ContributorForm({ onSubmit }: ContributorFormProps) {
 
   return (
     <div className="fixed inset-0 bg-toy-background flex flex-col select-none">
-      <div className="flex-1 flex flex-col items-center justify-center px-6">
-        <div className="w-full max-w-sm">
+      <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-6">
+        <div className="w-full max-w-sm py-8">
           {/* Header */}
           <h1
             className="text-2xl text-toy-text text-center mb-8"
@@ -99,7 +99,7 @@ export function ContributorForm({ onSubmit }: ContributorFormProps) {
             onChange={(e) => setName(e.target.value)}
             placeholder="Your name"
             maxLength={50}
-            autoFocus
+            autoComplete="off"
             className="w-full px-4 py-3 rounded-xl border border-toy-divider bg-toy-surface text-toy-text placeholder:text-toy-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-toy-primary/30 focus:border-toy-primary"
           />
           <p className="mt-1.5 text-xs text-toy-text-secondary">
