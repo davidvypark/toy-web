@@ -36,13 +36,21 @@ function isAndroid(): boolean {
   return /Android/i.test(navigator.userAgent)
 }
 
+function isSafari(): boolean {
+  if (typeof navigator === 'undefined') return false
+  const ua = navigator.userAgent
+  return /Safari/i.test(ua) && !/Chrome|CriOS|FxiOS|EdgiOS/i.test(ua)
+}
+
 export function CardPageClient({ cardId, shareToken, cardTitle, recipientName, hostName, hostAvatarUrl }: CardPageClientProps) {
   const [inAppBrowser, setInAppBrowser] = useState(false)
   const [android, setAndroid] = useState(false)
+  const [safari, setSafari] = useState(false)
 
   useEffect(() => {
     setInAppBrowser(isInAppBrowser())
     setAndroid(isAndroid())
+    setSafari(isSafari())
   }, [])
 
   // Android users get the web recording flow
@@ -59,25 +67,10 @@ export function CardPageClient({ cardId, shareToken, cardTitle, recipientName, h
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-toy-background px-6 py-12 text-center">
-      {/* In-app browser warning */}
-      {inAppBrowser && (
-        <div className="mb-8 rounded-xl bg-toy-surface border border-toy-divider px-6 py-4 max-w-xs">
-          <p className="text-sm font-medium text-toy-text">
-            {android ? 'Open in Chrome to continue' : 'Open in Safari to continue'}
-          </p>
-          <p className="mt-1 text-xs text-toy-text-secondary">
-            Tap the <span className="font-semibold">&hellip;</span> menu, then{' '}
-            <span className="font-semibold">
-              {android ? '\u201COpen in Chrome\u201D' : '\u201COpen in Safari\u201D'}
-            </span>
-          </p>
-        </div>
-      )}
-
-      {/* Top section — App Clip arrow */}
-      {!inAppBrowser && (
-        <div className="mb-8">
+    <main className="flex min-h-screen flex-col items-center bg-toy-background px-6 text-center">
+      {/* Top section — App Clip arrow, pinned to top (Safari only) */}
+      {!inAppBrowser && safari && (
+        <div className="pt-3 mb-4">
           <div className="animate-bounce-gentle mb-2">
             <svg className="mx-auto h-6 w-6 text-toy-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
@@ -92,8 +85,26 @@ export function CardPageClient({ cardId, shareToken, cardTitle, recipientName, h
         </div>
       )}
 
-      {/* Divider */}
-      {!inAppBrowser && (
+      {/* In-app browser warning */}
+      {inAppBrowser && (
+        <div className="mt-12 mb-8 rounded-xl bg-toy-surface border border-toy-divider px-6 py-4 max-w-xs">
+          <p className="text-sm font-medium text-toy-text">
+            {android ? 'Open in Chrome to continue' : 'Open in Safari to continue'}
+          </p>
+          <p className="mt-1 text-xs text-toy-text-secondary">
+            Tap the <span className="font-semibold">&hellip;</span> menu, then{' '}
+            <span className="font-semibold">
+              {android ? '\u201COpen in Chrome\u201D' : '\u201COpen in Safari\u201D'}
+            </span>
+          </p>
+        </div>
+      )}
+
+      {/* Center the remaining content */}
+      <div className="flex-1 flex flex-col items-center justify-center">
+
+      {/* Divider (Safari only — pairs with App Clip arrow) */}
+      {!inAppBrowser && safari && (
         <div className="flex items-center gap-3 mb-8 w-full max-w-xs">
           <div className="flex-1 h-px bg-toy-divider" />
           <span className="text-xs text-toy-text-secondary">or</span>
@@ -155,6 +166,8 @@ export function CardPageClient({ cardId, shareToken, cardTitle, recipientName, h
             className="h-[48px] w-auto dark:invert"
           />
         </a>
+      </div>
+
       </div>
     </main>
   )
