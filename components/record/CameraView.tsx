@@ -9,27 +9,35 @@ interface CameraViewProps {
 
 const MAX_DURATION = 7 // seconds
 const MIN_DURATION = 1 // seconds
+const CANVAS_WIDTH = 1080
+const CANVAS_HEIGHT = 1920
 
 export function CameraView({ onRecorded, onBack }: CameraViewProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const recordStreamRef = useRef<MediaStream | null>(null)
   const recorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const startTimeRef = useRef<number>(0)
   const mimeTypeRef = useRef<string>('video/webm')
+  const rafRef = useRef<number>(0)
 
   const [isRecording, setIsRecording] = useState(false)
   const [elapsed, setElapsed] = useState(0)
   const [progress, setProgress] = useState(0)
   const [cameraReady, setCameraReady] = useState(false)
-  const [cameraAspect, setCameraAspect] = useState('3 / 4')
   const [permissionDenied, setPermissionDenied] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [hasClip, setHasClip] = useState(false)
   const [clipBlob, setClipBlob] = useState<Blob | null>(null)
 
   const stopCamera = useCallback(() => {
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current)
+      rafRef.current = 0
+    }
     if (timerRef.current) {
       clearInterval(timerRef.current)
       timerRef.current = null
@@ -40,6 +48,10 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(t => t.stop())
       streamRef.current = null
+    }
+    if (recordStreamRef.current) {
+      recordStreamRef.current.getTracks().forEach(t => t.stop())
+      recordStreamRef.current = null
     }
   }, [])
 
@@ -57,8 +69,52 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
   const stopRecordingRef = useRef(stopRecording)
   stopRecordingRef.current = stopRecording
 
+  // Draw 9:16 center crop from video onto canvas
+  const drawFrame = useCallback(() => {
+    const video = videoRef.current
+    const canvas = canvasRef.current
+    if (!video || !canvas || video.readyState < 2) {
+      rafRef.current = requestAnimationFrame(drawFrame)
+      return
+    }
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    const vw = video.videoWidth
+    const vh = video.videoHeight
+
+    // Calculate center crop for 9:16
+    const targetRatio = 9 / 16
+    const sourceRatio = vw / vh
+
+    let sx: number, sy: number, sw: number, sh: number
+
+    if (sourceRatio > targetRatio) {
+      // Camera is wider than 9:16 — crop sides
+      sh = vh
+      sw = vh * targetRatio
+      sx = (vw - sw) / 2
+      sy = 0
+    } else {
+      // Camera is narrower — crop top/bottom
+      sw = vw
+      sh = vw / targetRatio
+      sx = 0
+      sy = (vh - sh) / 2
+    }
+
+    // Mirror horizontally for front camera
+    ctx.save()
+    ctx.scale(-1, 1)
+    ctx.drawImage(video, sx, sy, sw, sh, -CANVAS_WIDTH, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+    ctx.restore()
+
+    rafRef.current = requestAnimationFrame(drawFrame)
+  }, [])
+
   const startRecording = useCallback(() => {
-    if (!streamRef.current || isRecording) return
+    if (!recordStreamRef.current || isRecording) return
 
     chunksRef.current = []
 
@@ -70,7 +126,7 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
 
     mimeTypeRef.current = mimeType
 
-    const recorder = new MediaRecorder(streamRef.current, {
+    const recorder = new MediaRecorder(recordStreamRef.current, {
       mimeType,
       videoBitsPerSecond: 2_500_000,
     })
@@ -134,6 +190,7 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
     }
   }, [clipBlob, onRecorded])
 
+  // Start camera on mount
   useEffect(() => {
     let cancelled = false
 
@@ -149,27 +206,30 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
           return
         }
 
-        // Read actual camera dimensions and set container aspect ratio
-        const videoTrack = stream.getVideoTracks()[0]
-        if (videoTrack) {
-          const settings = videoTrack.getSettings()
-          if (settings.width && settings.height) {
-            // On portrait phones, width < height means portrait feed
-            const w = settings.width
-            const h = settings.height
-            if (w < h) {
-              setCameraAspect(`${w} / ${h}`)
-            } else {
-              // Landscape feed on portrait phone — swap for display
-              setCameraAspect(`${h} / ${w}`)
-            }
-          }
-        }
-
         streamRef.current = stream
         if (videoRef.current) {
           videoRef.current.srcObject = stream
         }
+
+        // Set up canvas for 9:16 crop recording
+        const canvas = canvasRef.current
+        if (canvas) {
+          canvas.width = CANVAS_WIDTH
+          canvas.height = CANVAS_HEIGHT
+
+          // Start drawing frames
+          rafRef.current = requestAnimationFrame(drawFrame)
+
+          // Create combined stream: canvas video + camera audio
+          const canvasStream = canvas.captureStream(30)
+          const audioTrack = stream.getAudioTracks()[0]
+          const tracks = [...canvasStream.getVideoTracks()]
+          if (audioTrack) {
+            tracks.push(audioTrack)
+          }
+          recordStreamRef.current = new MediaStream(tracks)
+        }
+
         setCameraReady(true)
       } catch (err) {
         if (cancelled) return
@@ -188,7 +248,7 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
       cancelled = true
       stopCamera()
     }
-  }, [stopCamera])
+  }, [stopCamera, drawFrame])
 
   if (permissionDenied) {
     return (
@@ -236,14 +296,16 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
 
   return (
     <div className="fixed inset-0 bg-black flex flex-col items-center justify-center px-4 py-4">
-      <div className="relative w-full max-w-sm rounded-2xl overflow-hidden bg-black" style={{ aspectRatio: cameraAspect }}>
+      {/* Hidden canvas for 9:16 crop recording */}
+      <canvas ref={canvasRef} className="hidden" />
+
+      <div className="relative w-full max-w-sm aspect-[9/16] rounded-2xl overflow-hidden bg-black">
         <video
           ref={videoRef}
           autoPlay
           playsInline
           muted
           className="absolute inset-0 w-full h-full object-cover"
-          style={{ transform: 'scaleX(-1)' }}
         />
 
         {/* Loading overlay */}

@@ -33,6 +33,14 @@ export function ContributorForm({ onSubmit }: ContributorFormProps) {
     <div className="fixed inset-0 bg-toy-background flex flex-col">
       <div className="flex-1 flex flex-col items-center justify-center px-6">
         <div className="w-full max-w-sm">
+          {/* Header */}
+          <h1
+            className="text-2xl text-toy-text text-center mb-8"
+            style={{ fontFamily: 'var(--font-dm-serif), Georgia, serif' }}
+          >
+            Sign Your Name
+          </h1>
+
           {/* Avatar picker */}
           <div className="flex justify-center mb-8">
             <button
