@@ -35,7 +35,7 @@ export function VideoReview({ videoBlob, onRetake, onConfirm }: VideoReviewProps
             playsInline
             autoPlay
             muted={false}
-            className="absolute inset-0 w-full h-full object-contain"
+            className="absolute inset-0 w-full h-full object-cover"
             style={{ transform: 'scaleX(-1)' }}
           />
         )}

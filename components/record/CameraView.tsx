@@ -141,6 +141,8 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: 'user',
+            width: { ideal: 1080 },
+            height: { ideal: 1920 },
             aspectRatio: { ideal: 9 / 16 },
           },
           audio: true,
@@ -227,7 +229,7 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
           autoPlay
           playsInline
           muted
-          className="absolute inset-0 w-full h-full object-contain"
+          className="absolute inset-0 w-full h-full object-cover"
           style={{ transform: 'scaleX(-1)' }}
         />
 
