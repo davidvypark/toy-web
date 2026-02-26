@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect, useMemo } from 'react'
+import { useRef, useState, useEffect, useMemo } from 'react'
 
 interface VideoReviewProps {
   videoBlob: Blob
@@ -11,22 +11,36 @@ interface VideoReviewProps {
 export function VideoReview({ videoBlob, onRetake, onConfirm }: VideoReviewProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const videoUrl = useMemo(() => URL.createObjectURL(videoBlob), [videoBlob])
+  const [videoAspect, setVideoAspect] = useState('3 / 4')
 
   useEffect(() => {
     return () => URL.revokeObjectURL(videoUrl)
   }, [videoUrl])
 
   useEffect(() => {
-    if (videoRef.current && videoUrl) {
-      videoRef.current.play().catch(() => {
-        // Autoplay may be blocked — user can tap to play
-      })
+    const video = videoRef.current
+    if (!video || !videoUrl) return
+
+    const handleMetadata = () => {
+      const w = video.videoWidth
+      const h = video.videoHeight
+      if (w && h) {
+        if (w < h) {
+          setVideoAspect(`${w} / ${h}`)
+        } else {
+          setVideoAspect(`${h} / ${w}`)
+        }
+      }
+      video.play().catch(() => {})
     }
+
+    video.addEventListener('loadedmetadata', handleMetadata)
+    return () => video.removeEventListener('loadedmetadata', handleMetadata)
   }, [videoUrl])
 
   return (
     <div className="fixed inset-0 bg-toy-background flex flex-col items-center justify-center px-4 py-4">
-      <div className="relative w-full max-w-sm aspect-[9/16] rounded-2xl overflow-hidden bg-black">
+      <div className="relative w-full max-w-sm rounded-2xl overflow-hidden bg-black" style={{ aspectRatio: videoAspect }}>
         {videoUrl && (
           <video
             ref={videoRef}

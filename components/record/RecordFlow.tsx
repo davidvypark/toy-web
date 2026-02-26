@@ -75,10 +75,10 @@ export function RecordFlow({
   // Step: Invite
   if (step === 'invite') {
     return (
-      <main className="flex min-h-screen flex-col bg-toy-background px-6 py-12">
+      <main className="flex h-[100dvh] flex-col bg-toy-background px-6 py-6 overflow-hidden">
         {/* Branding */}
         <h1
-          className="text-4xl leading-tight text-toy-text mt-4"
+          className="text-3xl leading-tight text-toy-text mt-2"
           style={{ fontFamily: 'var(--font-dm-serif), Georgia, serif', lineHeight: '0.95' }}
         >
           Thinking<br />Of You

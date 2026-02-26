@@ -23,6 +23,7 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
   const [elapsed, setElapsed] = useState(0)
   const [progress, setProgress] = useState(0)
   const [cameraReady, setCameraReady] = useState(false)
+  const [cameraAspect, setCameraAspect] = useState('3 / 4')
   const [permissionDenied, setPermissionDenied] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [hasClip, setHasClip] = useState(false)
@@ -139,18 +140,30 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
     async function initCamera() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: 'user',
-            width: { ideal: 1080 },
-            height: { ideal: 1920 },
-            aspectRatio: { ideal: 9 / 16 },
-          },
+          video: { facingMode: 'user' },
           audio: true,
         })
 
         if (cancelled) {
           stream.getTracks().forEach(t => t.stop())
           return
+        }
+
+        // Read actual camera dimensions and set container aspect ratio
+        const videoTrack = stream.getVideoTracks()[0]
+        if (videoTrack) {
+          const settings = videoTrack.getSettings()
+          if (settings.width && settings.height) {
+            // On portrait phones, width < height means portrait feed
+            const w = settings.width
+            const h = settings.height
+            if (w < h) {
+              setCameraAspect(`${w} / ${h}`)
+            } else {
+              // Landscape feed on portrait phone — swap for display
+              setCameraAspect(`${h} / ${w}`)
+            }
+          }
         }
 
         streamRef.current = stream
@@ -223,7 +236,7 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
 
   return (
     <div className="fixed inset-0 bg-black flex flex-col items-center justify-center px-4 py-4">
-      <div className="relative w-full max-w-sm aspect-[9/16] rounded-2xl overflow-hidden bg-black">
+      <div className="relative w-full max-w-sm rounded-2xl overflow-hidden bg-black" style={{ aspectRatio: cameraAspect }}>
         <video
           ref={videoRef}
           autoPlay
