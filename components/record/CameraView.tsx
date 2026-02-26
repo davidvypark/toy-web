@@ -53,7 +53,6 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
     setIsRecording(false)
   }, [])
 
-  // Use a ref so the timer interval can call the latest stopRecording
   const stopRecordingRef = useRef(stopRecording)
   stopRecordingRef.current = stopRecording
 
@@ -134,7 +133,6 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
     }
   }, [clipBlob, onRecorded])
 
-  // Start camera on mount
   useEffect(() => {
     let cancelled = false
 
@@ -177,7 +175,6 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
     }
   }, [stopCamera])
 
-  // Permission denied view
   if (permissionDenied) {
     return (
       <div className="fixed inset-0 bg-black flex flex-col items-center justify-center px-6 text-center">
@@ -198,7 +195,6 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
     )
   }
 
-  // Error view
   if (error) {
     return (
       <div className="fixed inset-0 bg-black flex flex-col items-center justify-center px-6 text-center">
@@ -220,82 +216,77 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
   const elapsedDisplay = elapsed.toFixed(1)
   const maxDisplay = MAX_DURATION.toFixed(1)
 
-  // SVG progress ring calculations
   const radius = 40
   const circumference = 2 * Math.PI * radius
 
   return (
-    <div className="fixed inset-0 bg-black flex flex-col">
-      {/* Camera preview */}
-      <div className="flex-1 relative flex items-center justify-center overflow-hidden pt-4">
-        <div className="relative h-full max-h-full aspect-[9/16] overflow-hidden rounded-2xl">
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ transform: 'scaleX(-1)' }}
-          />
+    <div className="fixed inset-0 bg-black flex flex-col items-center justify-center px-4 py-4">
+      <div className="relative w-full max-w-sm aspect-[9/16] rounded-2xl overflow-hidden bg-black">
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className="absolute inset-0 w-full h-full object-contain"
+          style={{ transform: 'scaleX(-1)' }}
+        />
 
-          {/* Loading overlay */}
-          {!cameraReady && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="h-8 w-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            </div>
-          )}
-
-          {/* Top bar */}
-          <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-5 pt-3">
-            {/* Close button */}
-            <button
-              onClick={onBack}
-              className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md flex items-center justify-center"
-            >
-              <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            {/* Time display */}
-            <div className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-black/30 backdrop-blur-md">
-              <div className={`w-2.5 h-2.5 rounded-full ${isRecording ? 'bg-red-500' : hasClip ? 'bg-green-500' : 'bg-white/40'}`} />
-              <span className="text-white text-sm font-mono">
-                {elapsedDisplay} / {maxDisplay}
-              </span>
-            </div>
+        {/* Loading overlay */}
+        {!cameraReady && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="h-8 w-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           </div>
-        </div>
-      </div>
+        )}
 
-      {/* Bottom controls */}
-      <div className="bg-black px-6 pb-[max(env(safe-area-inset-bottom),32px)] pt-6">
-        <div className="flex items-center justify-center gap-8">
-          {/* Start Over button */}
+        {/* Top bar */}
+        <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 pt-3">
           <button
-            onClick={handleStartOver}
-            className={`flex flex-col items-center gap-1 ${hasClip && !isRecording ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+            onClick={onBack}
+            className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md flex items-center justify-center"
           >
-            <div className="w-12 h-12 rounded-full border-2 border-white/40 flex items-center justify-center">
-              <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182" />
-              </svg>
-            </div>
-            <span className="text-white/70 text-[10px]">Start Over</span>
+            <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
           </button>
 
-          {/* Record button */}
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-black/30 backdrop-blur-md">
+            <div className={`w-2.5 h-2.5 rounded-full ${isRecording ? 'bg-red-500' : hasClip ? 'bg-green-500' : 'bg-white/40'}`} />
+            <span className="text-white text-sm font-mono">
+              {elapsedDisplay} / {maxDisplay}
+            </span>
+          </div>
+        </div>
+
+        {/* Bottom controls — inside camera */}
+        <div className="absolute bottom-0 left-0 right-0 pb-6 pt-12 bg-gradient-to-t from-black/60 to-transparent">
+          {/* Status text */}
+          <div className="text-center mb-3">
             {!isRecording && !hasClip && (
-              <p className="text-white/70 text-xs">Tap to start recording</p>
+              <p className="text-white/80 text-sm">Tap to start recording</p>
             )}
             {isRecording && (
-              <p className="text-white/70 text-xs">Tap to stop</p>
+              <p className="text-white/80 text-sm">Tap to stop</p>
             )}
             {hasClip && !isRecording && (
-              <p className="text-green-400 text-xs">Clip recorded</p>
+              <p className="text-green-400 text-sm">Clip recorded</p>
             )}
+          </div>
 
+          <div className="flex items-center justify-center gap-8">
+            {/* Start Over */}
+            <button
+              onClick={handleStartOver}
+              className={`flex flex-col items-center gap-1.5 ${hasClip && !isRecording ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+            >
+              <div className="w-12 h-12 rounded-full border-2 border-white/40 flex items-center justify-center">
+                <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182" />
+                </svg>
+              </div>
+              <span className="text-white/80 text-xs">Start Over</span>
+            </button>
+
+            {/* Record button */}
             <div className="relative w-20 h-20">
               <svg className="absolute inset-0 w-20 h-20" viewBox="0 0 88 88">
                 <circle
@@ -334,20 +325,20 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
                 />
               </button>
             </div>
-          </div>
 
-          {/* Done button */}
-          <button
-            onClick={handleDone}
-            className={`flex flex-col items-center gap-1 ${hasClip && !isRecording ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-          >
-            <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center">
-              <svg className="h-5 w-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-              </svg>
-            </div>
-            <span className="text-white/70 text-[10px]">Done</span>
-          </button>
+            {/* Done */}
+            <button
+              onClick={handleDone}
+              className={`flex flex-col items-center gap-1.5 ${hasClip && !isRecording ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+            >
+              <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center">
+                <svg className="h-5 w-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                </svg>
+              </div>
+              <span className="text-white/80 text-xs">Done</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
