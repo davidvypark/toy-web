@@ -66,7 +66,7 @@ export function CardPageClient({ shareToken, cardTitle, recipientName, hostName,
         {shareToken && (
           <Link
             href={`/card/${shareToken}/record`}
-            className="w-full max-w-xs px-6 py-4 bg-toy-primary text-white rounded-2xl font-medium text-lg text-center transition-colors hover:bg-toy-primary-dark mb-6 block"
+            className="w-full max-w-xs px-6 py-4 bg-toy-primary text-white dark:text-black rounded-2xl font-medium text-lg text-center transition-colors hover:bg-toy-primary-dark mb-6 block"
           >
             Record on Web
           </Link>
