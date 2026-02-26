@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { createBrowserClient } from '@/lib/supabase-browser'
 import { CameraView } from './CameraView'
 import { VideoReview } from './VideoReview'
 import { ContributorForm } from './ContributorForm'
@@ -46,6 +47,14 @@ export function RecordFlow({
     setUploadError(null)
 
     try {
+      // Sign in anonymously to get a real auth.users ID
+      // (mirrors the iOS App Clip pattern)
+      const supabase = createBrowserClient()
+      const { data: authData, error: authError } = await supabase.auth.signInAnonymously()
+      if (authError || !authData.session) {
+        throw new Error('Authentication failed')
+      }
+
       const formData = new FormData()
       formData.append('video', videoBlob, 'clip.webm')
       formData.append('shareToken', shareToken)
@@ -56,6 +65,9 @@ export function RecordFlow({
 
       const response = await fetch('/api/record', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authData.session.access_token}`,
+        },
         body: formData,
       })
 

@@ -43,6 +43,26 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServerClient()
 
+    // Verify anonymous auth token from client
+    const authHeader = request.headers.get('Authorization')
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Missing authentication' },
+        { status: 401 }
+      )
+    }
+    const { data: { user }, error: userError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    )
+    if (userError || !user) {
+      return NextResponse.json(
+        { error: 'Invalid authentication' },
+        { status: 401 }
+      )
+    }
+
+    const participantId = user.id
+
     // Look up card by share token
     const { data: card, error: cardError } = await supabase
       .from('cards')
@@ -57,8 +77,6 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       )
     }
-
-    const participantId = crypto.randomUUID()
 
     // Upload video to clips bucket
     const videoBuffer = Buffer.from(await video.arrayBuffer())
@@ -100,18 +118,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Try to create a profile for this web contributor
-    // This may fail if profiles has an FK to auth.users — that's OK
+    // Update profile with contributor details
+    // (handle_new_user() trigger already created the row on signInAnonymously)
     const { error: profileError } = await supabase
       .from('profiles')
-      .upsert({
-        id: participantId,
+      .update({
         display_name: contributorName,
-        avatar_url: avatarPath,
-      }, { onConflict: 'id' })
+        ...(avatarPath && { avatar_url: avatarPath }),
+      })
+      .eq('id', participantId)
 
     if (profileError) {
-      console.warn('Profile creation skipped (FK constraint?):', profileError.message)
+      console.warn('Profile update failed:', profileError.message)
     }
 
     // Get next order position
