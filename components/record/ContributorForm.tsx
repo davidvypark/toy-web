@@ -30,7 +30,7 @@ export function ContributorForm({ onSubmit }: ContributorFormProps) {
   const isValid = name.trim().length > 0 && name.trim().length <= 50
 
   return (
-    <div className="fixed inset-0 bg-toy-background flex flex-col">
+    <div className="fixed inset-0 bg-toy-background flex flex-col select-none">
       <div className="flex-1 flex flex-col items-center justify-center px-6">
         <div className="w-full max-w-sm">
           {/* Header */}

@@ -87,7 +87,7 @@ export function RecordFlow({
   // Step: Invite
   if (step === 'invite') {
     return (
-      <main className="flex h-[100dvh] flex-col bg-toy-background px-6 py-6 overflow-hidden">
+      <main className="flex h-[100dvh] flex-col bg-toy-background px-6 py-6 overflow-hidden select-none">
         {/* Branding */}
         <h1
           className="text-3xl leading-tight text-toy-text mt-2"
@@ -146,7 +146,7 @@ export function RecordFlow({
         {/* Record button */}
         <button
           onClick={() => setStep('camera')}
-          className="w-full px-6 py-4 bg-toy-primary text-white rounded-2xl font-medium text-lg transition-colors hover:bg-toy-primary-dark mb-4"
+          className="w-full px-6 py-4 bg-toy-primary text-white dark:text-black rounded-2xl font-medium text-lg transition-colors hover:bg-toy-primary-dark mb-4"
         >
           Record Now
         </button>
@@ -192,7 +192,7 @@ export function RecordFlow({
   // Step: Submitting
   if (step === 'submitting') {
     return (
-      <div className="fixed inset-0 bg-toy-background flex flex-col items-center justify-center px-6">
+      <div className="fixed inset-0 bg-toy-background flex flex-col items-center justify-center px-6 select-none">
         <div className="h-10 w-10 border-3 border-toy-divider border-t-toy-primary rounded-full animate-spin mb-6" />
         <p className="text-toy-text-secondary">Uploading your clip...</p>
       </div>
@@ -202,7 +202,7 @@ export function RecordFlow({
   // Step: Done
   if (step === 'done') {
     return (
-      <div className="fixed inset-0 bg-toy-background flex flex-col items-center justify-center px-6 text-center">
+      <div className="fixed inset-0 bg-toy-background flex flex-col items-center justify-center px-6 text-center select-none">
         <svg className="h-20 w-20 text-green-500 mb-6" fill="currentColor" viewBox="0 0 24 24">
           <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clipRule="evenodd" />
         </svg>

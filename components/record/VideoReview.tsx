@@ -23,7 +23,7 @@ export function VideoReview({ videoBlob, onRetake, onConfirm }: VideoReviewProps
   }, [videoUrl])
 
   return (
-    <div className="fixed inset-0 bg-toy-background flex flex-col items-center justify-center px-4 py-4">
+    <div className="fixed inset-0 bg-toy-background flex flex-col items-center justify-center px-4 py-4 select-none">
       <div className="relative w-full max-w-sm aspect-[9/16] rounded-2xl overflow-hidden bg-black">
         {videoUrl && (
           <video
