@@ -10,25 +10,7 @@ interface CardPageClientProps {
   recipientName?: string
   hostName?: string | null
   hostAvatarUrl?: string | null
-}
-
-const IN_APP_BROWSER_PATTERNS = [
-  'Telegram',
-  'Instagram',
-  'FBAN',
-  'FBAV',
-  'Line/',
-  'Twitter',
-  'BytedanceWebview',
-  'Snapchat',
-  'WeChat',
-  'MicroMessenger',
-]
-
-function isInAppBrowser(): boolean {
-  if (typeof navigator === 'undefined') return false
-  const ua = navigator.userAgent
-  return IN_APP_BROWSER_PATTERNS.some(pattern => ua.includes(pattern))
+  testMode?: boolean
 }
 
 function isAndroid(): boolean {
@@ -36,70 +18,17 @@ function isAndroid(): boolean {
   return /Android/i.test(navigator.userAgent)
 }
 
-function isSafari(): boolean {
-  if (typeof navigator === 'undefined') return false
-  const ua = navigator.userAgent
-  return /Safari/i.test(ua) && !/Chrome|CriOS|FxiOS|EdgiOS/i.test(ua)
-}
-
-export function CardPageClient({ shareToken, cardTitle, recipientName, hostName, hostAvatarUrl }: CardPageClientProps) {
-  const [inAppBrowser, setInAppBrowser] = useState(false)
+export function CardPageClient({ shareToken, cardTitle, recipientName, hostName, hostAvatarUrl, testMode }: CardPageClientProps) {
   const [android, setAndroid] = useState(false)
-  const [safari, setSafari] = useState(false)
 
   useEffect(() => {
-    setInAppBrowser(isInAppBrowser())
     setAndroid(isAndroid())
-    setSafari(isSafari())
   }, [])
-
-  const showAppStore = !android
 
   return (
     <main className="flex min-h-screen flex-col items-center bg-toy-background px-6 text-center">
-      {/* App Clip arrow (Safari only, not in-app browser) */}
-      {!inAppBrowser && safari && (
-        <div className="pt-3 mb-4">
-          <div className="animate-bounce-gentle mb-2">
-            <svg className="mx-auto h-6 w-6 text-toy-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
-            </svg>
-          </div>
-          <p className="text-sm font-medium text-toy-text">
-            Record your clip instantly
-          </p>
-          <p className="mt-0.5 text-xs text-toy-text-secondary">
-            No download needed — tap the banner above
-          </p>
-        </div>
-      )}
-
-      {/* In-app browser warning */}
-      {inAppBrowser && (
-        <div className="mt-12 mb-8 rounded-xl bg-toy-surface border border-toy-divider px-6 py-4 max-w-xs">
-          <p className="text-sm font-medium text-toy-text">
-            {android ? 'Open in Chrome to continue' : 'Open in Safari to continue'}
-          </p>
-          <p className="mt-1 text-xs text-toy-text-secondary">
-            Tap the <span className="font-semibold">&hellip;</span> menu, then{' '}
-            <span className="font-semibold">
-              {android ? '\u201COpen in Chrome\u201D' : '\u201COpen in Safari\u201D'}
-            </span>
-          </p>
-        </div>
-      )}
-
       {/* Center the content */}
       <div className="flex-1 flex flex-col items-center justify-center">
-
-        {/* Divider (Safari only — pairs with App Clip arrow) */}
-        {!inAppBrowser && safari && (
-          <div className="flex items-center gap-3 mb-8 w-full max-w-xs">
-            <div className="flex-1 h-px bg-toy-divider" />
-            <span className="text-xs text-toy-text-secondary">or</span>
-            <div className="flex-1 h-px bg-toy-divider" />
-          </div>
-        )}
 
         {/* Personalized card info */}
         <div className="mb-8">
@@ -134,10 +63,10 @@ export function CardPageClient({ shareToken, cardTitle, recipientName, hostName,
           )}
         </div>
 
-        {/* Record on Web button (not shown in in-app browsers) */}
-        {!inAppBrowser && shareToken && (
+        {/* Record on Web button (test mode only) */}
+        {testMode && shareToken && (
           <Link
-            href={`/card/${shareToken}/record`}
+            href={`/card/test/${shareToken}/record`}
             className="w-full max-w-xs px-6 py-4 bg-toy-primary text-white rounded-2xl font-medium text-lg text-center transition-colors hover:bg-toy-primary-dark mb-6 block"
           >
             Record on Web
@@ -145,20 +74,16 @@ export function CardPageClient({ shareToken, cardTitle, recipientName, hostName,
         )}
 
         {/* App Store link (iOS only, not Android) */}
-        {showAppStore && (
+        {!android && (
           <div>
-            {!inAppBrowser && (
-              <p className="text-sm text-toy-text-secondary mb-1">
-                or get the full experience
-              </p>
-            )}
-            {!inAppBrowser && (
-              <div className="animate-bounce-gentle-down mb-3">
-                <svg className="mx-auto h-6 w-6 text-toy-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                </svg>
-              </div>
-            )}
+            <p className="text-sm text-toy-text-secondary mb-1">
+              {testMode ? 'or get the full experience' : 'Get the full experience'}
+            </p>
+            <div className="animate-bounce-gentle-down mb-3">
+              <svg className="mx-auto h-6 w-6 text-toy-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </div>
             <a
               href="https://apps.apple.com/us/app/toy-group-video-cards/id6758913044"
               className="inline-block transition-opacity hover:opacity-70"

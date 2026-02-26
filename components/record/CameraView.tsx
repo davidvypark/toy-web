@@ -201,41 +201,43 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
   return (
     <div className="fixed inset-0 bg-black flex flex-col">
       {/* Camera preview */}
-      <div className="flex-1 relative overflow-hidden">
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ transform: 'scaleX(-1)' }}
-        />
+      <div className="flex-1 relative flex items-center justify-center overflow-hidden">
+        <div className="relative h-full max-h-full aspect-[9/16] overflow-hidden rounded-2xl">
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ transform: 'scaleX(-1)' }}
+          />
 
-        {/* Loading overlay */}
-        {!cameraReady && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="h-8 w-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-          </div>
-        )}
+          {/* Loading overlay */}
+          {!cameraReady && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="h-8 w-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            </div>
+          )}
 
-        {/* Top bar */}
-        <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-5 pt-[max(env(safe-area-inset-top),8px)]">
-          {/* Close button */}
-          <button
-            onClick={onBack}
-            className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md flex items-center justify-center"
-          >
-            <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-            </svg>
-          </button>
+          {/* Top bar */}
+          <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-5 pt-[max(env(safe-area-inset-top),8px)]">
+            {/* Close button */}
+            <button
+              onClick={onBack}
+              className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md flex items-center justify-center"
+            >
+              <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
 
-          {/* Time display */}
-          <div className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-black/30 backdrop-blur-md">
-            <div className={`w-2.5 h-2.5 rounded-full ${isRecording ? 'bg-red-500' : 'bg-white/40'}`} />
-            <span className="text-white text-sm font-mono">
-              {elapsedDisplay} / {maxDisplay}
-            </span>
+            {/* Time display */}
+            <div className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-black/30 backdrop-blur-md">
+              <div className={`w-2.5 h-2.5 rounded-full ${isRecording ? 'bg-red-500' : 'bg-white/40'}`} />
+              <span className="text-white text-sm font-mono">
+                {elapsedDisplay} / {maxDisplay}
+              </span>
+            </div>
           </div>
         </div>
       </div>
