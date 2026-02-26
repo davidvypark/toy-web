@@ -154,9 +154,9 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
       const canvas = canvasRef.current
       const thumbCanvas = document.createElement('canvas')
       thumbCanvas.width = 150
-      thumbCanvas.height = 200
+      thumbCanvas.height = 267
       if (canvas) {
-        thumbCanvas.getContext('2d')!.drawImage(canvas, 0, 0, 150, 200)
+        thumbCanvas.getContext('2d')!.drawImage(canvas, 0, 0, 150, 267)
       }
       thumbCanvas.toBlob(
         (thumbBlob) => {

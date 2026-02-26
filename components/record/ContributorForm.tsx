@@ -62,7 +62,7 @@ export function ContributorForm({ onSubmit }: ContributorFormProps) {
           <div className="flex justify-center mb-8">
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="relative w-24 h-24 rounded-full overflow-hidden bg-toy-divider flex items-center justify-center transition-opacity hover:opacity-80"
+              className="relative w-24 h-24 rounded-full overflow-hidden bg-toy-surface border-2 border-toy-divider flex items-center justify-center transition-opacity hover:opacity-80"
             >
               {avatarPreview ? (
                 // eslint-disable-next-line @next/next/no-img-element

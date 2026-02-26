@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { createBrowserClient } from '@/lib/supabase-browser'
 import { CameraView } from './CameraView'
 import { VideoReview } from './VideoReview'
@@ -28,6 +28,11 @@ export function RecordFlow({
   const [videoDuration, setVideoDuration] = useState<number>(0)
   const [videoThumbnail, setVideoThumbnail] = useState<Blob | null>(null)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [android, setAndroid] = useState(false)
+
+  useEffect(() => {
+    setAndroid(/Android/i.test(navigator.userAgent))
+  }, [])
 
   const handleRecorded = useCallback((blob: Blob, duration: number, thumbnail: Blob) => {
     setVideoBlob(blob)
@@ -306,15 +311,23 @@ export function RecordFlow({
           Your video message has been added to the card.
         </p>
 
-        <a
-          href="https://apps.apple.com/us/app/toy-group-video-cards/id6758913044"
-          className="w-full max-w-xs px-6 py-3.5 bg-toy-primary text-white dark:text-black rounded-2xl font-medium transition-colors hover:bg-toy-primary-dark text-center block"
-        >
-          Download the App
-        </a>
-        <p className="text-toy-text-secondary text-sm mt-3 max-w-xs">
-          Get the full experience and watch the final video
-        </p>
+        {!android && (
+          <>
+            <p className="text-toy-text-secondary max-w-xs">
+              Download the app to watch the full video when it&apos;s done
+            </p>
+            <a
+              href="https://apps.apple.com/us/app/toy-group-video-cards/id6758913044"
+              className="inline-block transition-opacity hover:opacity-70 mt-4"
+            >
+              <img
+                src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
+                alt="Download on the App Store"
+                className="h-[48px] w-auto dark:invert"
+              />
+            </a>
+          </>
+        )}
       </div>
     )
   }

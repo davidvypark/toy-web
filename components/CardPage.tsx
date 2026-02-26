@@ -10,7 +10,6 @@ interface CardPageClientProps {
   recipientName?: string
   hostName?: string | null
   hostAvatarUrl?: string | null
-  testMode?: boolean
 }
 
 function isAndroid(): boolean {
@@ -18,7 +17,7 @@ function isAndroid(): boolean {
   return /Android/i.test(navigator.userAgent)
 }
 
-export function CardPageClient({ shareToken, cardTitle, recipientName, hostName, hostAvatarUrl, testMode }: CardPageClientProps) {
+export function CardPageClient({ shareToken, cardTitle, recipientName, hostName, hostAvatarUrl }: CardPageClientProps) {
   const [android, setAndroid] = useState(false)
 
   useEffect(() => {
@@ -63,10 +62,10 @@ export function CardPageClient({ shareToken, cardTitle, recipientName, hostName,
           )}
         </div>
 
-        {/* Record on Web button (test mode only) */}
-        {testMode && shareToken && (
+        {/* Record on Web button */}
+        {shareToken && (
           <Link
-            href={`/card/test/${shareToken}/record`}
+            href={`/card/${shareToken}/record`}
             className="w-full max-w-xs px-6 py-4 bg-toy-primary text-white rounded-2xl font-medium text-lg text-center transition-colors hover:bg-toy-primary-dark mb-6 block"
           >
             Record on Web
@@ -77,7 +76,7 @@ export function CardPageClient({ shareToken, cardTitle, recipientName, hostName,
         {!android && (
           <div>
             <p className="text-sm text-toy-text-secondary mb-1">
-              {testMode ? 'or get the full experience' : 'Get the full experience'}
+              or get the full experience
             </p>
             <div className="animate-bounce-gentle-down mb-3">
               <svg className="mx-auto h-6 w-6 text-toy-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
