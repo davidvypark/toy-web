@@ -62,13 +62,13 @@ export function VideoReview({ videoBlob, onRetake, onConfirm }: VideoReviewProps
         <div className="flex gap-4 max-w-sm mx-auto">
           <button
             onClick={onRetake}
-            className="flex-1 px-6 py-3.5 border-2 border-toy-primary text-toy-text rounded-2xl font-medium transition-colors hover:bg-toy-primary/5"
+            className="flex-1 px-6 py-3.5 border-2 border-black text-black rounded-2xl font-medium transition-colors hover:bg-black/5"
           >
             Retake
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 px-6 py-3.5 bg-toy-primary text-white rounded-2xl font-medium transition-colors hover:bg-toy-primary-dark"
+            className="flex-1 px-6 py-3.5 bg-black text-white rounded-2xl font-medium transition-colors hover:bg-black/80"
           >
             Use Video
           </button>

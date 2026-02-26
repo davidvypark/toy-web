@@ -17,6 +17,7 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
   const chunksRef = useRef<Blob[]>([])
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const startTimeRef = useRef<number>(0)
+  const mimeTypeRef = useRef<string>('video/webm')
 
   const [isRecording, setIsRecording] = useState(false)
   const [elapsed, setElapsed] = useState(0)
@@ -24,6 +25,8 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
   const [cameraReady, setCameraReady] = useState(false)
   const [permissionDenied, setPermissionDenied] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [hasClip, setHasClip] = useState(false)
+  const [clipBlob, setClipBlob] = useState<Blob | null>(null)
 
   const stopCamera = useCallback(() => {
     if (timerRef.current) {
@@ -65,6 +68,8 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
         ? 'video/webm;codecs=vp8,opus'
         : 'video/webm'
 
+    mimeTypeRef.current = mimeType
+
     const recorder = new MediaRecorder(streamRef.current, {
       mimeType,
       videoBitsPerSecond: 2_500_000,
@@ -79,23 +84,24 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
     recorder.onstop = () => {
       const duration = (Date.now() - startTimeRef.current) / 1000
       if (duration < MIN_DURATION) {
-        // Too short — reset
         setIsRecording(false)
         setElapsed(0)
         setProgress(0)
         return
       }
 
-      const blob = new Blob(chunksRef.current, { type: mimeType })
-      onRecorded(blob)
+      const blob = new Blob(chunksRef.current, { type: mimeTypeRef.current })
+      setClipBlob(blob)
+      setHasClip(true)
     }
 
     recorderRef.current = recorder
     startTimeRef.current = Date.now()
-    recorder.start(100) // collect data every 100ms
+    recorder.start(100)
     setIsRecording(true)
+    setHasClip(false)
+    setClipBlob(null)
 
-    // Timer for progress
     timerRef.current = setInterval(() => {
       const currentElapsed = (Date.now() - startTimeRef.current) / 1000
       setElapsed(currentElapsed)
@@ -105,7 +111,28 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
         stopRecordingRef.current()
       }
     }, 50)
-  }, [isRecording, onRecorded])
+  }, [isRecording])
+
+  const handleToggleRecording = useCallback(() => {
+    if (isRecording) {
+      stopRecording()
+    } else {
+      startRecording()
+    }
+  }, [isRecording, stopRecording, startRecording])
+
+  const handleStartOver = useCallback(() => {
+    setHasClip(false)
+    setClipBlob(null)
+    setElapsed(0)
+    setProgress(0)
+  }, [])
+
+  const handleDone = useCallback(() => {
+    if (clipBlob) {
+      onRecorded(clipBlob)
+    }
+  }, [clipBlob, onRecorded])
 
   // Start camera on mount
   useEffect(() => {
@@ -116,8 +143,7 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: 'user',
-            width: { ideal: 1080 },
-            height: { ideal: 1920 },
+            aspectRatio: { ideal: 9 / 16 },
           },
           audio: true,
         })
@@ -201,7 +227,7 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
   return (
     <div className="fixed inset-0 bg-black flex flex-col">
       {/* Camera preview */}
-      <div className="flex-1 relative flex items-center justify-center overflow-hidden">
+      <div className="flex-1 relative flex items-center justify-center overflow-hidden pt-4">
         <div className="relative h-full max-h-full aspect-[9/16] overflow-hidden rounded-2xl">
           <video
             ref={videoRef}
@@ -220,7 +246,7 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
           )}
 
           {/* Top bar */}
-          <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-5 pt-[max(env(safe-area-inset-top),8px)]">
+          <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-5 pt-3">
             {/* Close button */}
             <button
               onClick={onBack}
@@ -233,7 +259,7 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
 
             {/* Time display */}
             <div className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-black/30 backdrop-blur-md">
-              <div className={`w-2.5 h-2.5 rounded-full ${isRecording ? 'bg-red-500' : 'bg-white/40'}`} />
+              <div className={`w-2.5 h-2.5 rounded-full ${isRecording ? 'bg-red-500' : hasClip ? 'bg-green-500' : 'bg-white/40'}`} />
               <span className="text-white text-sm font-mono">
                 {elapsedDisplay} / {maxDisplay}
               </span>
@@ -244,23 +270,40 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
 
       {/* Bottom controls */}
       <div className="bg-black px-6 pb-[max(env(safe-area-inset-bottom),32px)] pt-6">
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center gap-8">
+          {/* Start Over button */}
+          <button
+            onClick={handleStartOver}
+            className={`flex flex-col items-center gap-1 ${hasClip && !isRecording ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+          >
+            <div className="w-12 h-12 rounded-full border-2 border-white/40 flex items-center justify-center">
+              <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182" />
+              </svg>
+            </div>
+            <span className="text-white/70 text-[10px]">Start Over</span>
+          </button>
+
+          {/* Record button */}
           <div className="flex flex-col items-center gap-2">
-            {!isRecording && elapsed === 0 && (
-              <p className="text-white/70 text-xs">Hold to Record</p>
+            {!isRecording && !hasClip && (
+              <p className="text-white/70 text-xs">Tap to start recording</p>
+            )}
+            {isRecording && (
+              <p className="text-white/70 text-xs">Tap to stop</p>
+            )}
+            {hasClip && !isRecording && (
+              <p className="text-green-400 text-xs">Clip recorded</p>
             )}
 
-            {/* Record button */}
             <div className="relative w-20 h-20">
               <svg className="absolute inset-0 w-20 h-20" viewBox="0 0 88 88">
-                {/* Background ring */}
                 <circle
                   cx="44" cy="44" r={radius}
                   fill="none"
                   stroke="rgba(255,255,255,0.2)"
                   strokeWidth="5"
                 />
-                {/* Progress ring */}
                 <circle
                   cx="44" cy="44" r={radius}
                   fill="none"
@@ -273,35 +316,38 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
                   style={{ transition: 'stroke-dashoffset 0.05s linear' }}
                 />
               </svg>
-              {/* Inner button */}
               <button
-                onPointerDown={(e) => {
-                  e.preventDefault()
-                  if (cameraReady) startRecording()
-                }}
-                onPointerUp={(e) => {
-                  e.preventDefault()
-                  if (isRecording) stopRecording()
-                }}
-                onPointerLeave={(e) => {
-                  e.preventDefault()
-                  if (isRecording) stopRecording()
-                }}
-                className="absolute inset-0 flex items-center justify-center touch-none"
-                disabled={!cameraReady}
+                onClick={handleToggleRecording}
+                className="absolute inset-0 flex items-center justify-center"
+                disabled={!cameraReady || (hasClip && !isRecording)}
               >
                 <div
                   className={`rounded-full transition-all duration-150 ${
                     isRecording
-                      ? 'w-12 h-12 bg-red-500'
-                      : cameraReady
-                        ? 'w-[60px] h-[60px] bg-white'
-                        : 'w-[60px] h-[60px] bg-white/30'
+                      ? 'w-8 h-8 rounded-lg bg-red-500'
+                      : hasClip
+                        ? 'w-[60px] h-[60px] bg-white/30'
+                        : cameraReady
+                          ? 'w-[60px] h-[60px] bg-white'
+                          : 'w-[60px] h-[60px] bg-white/30'
                   }`}
                 />
               </button>
             </div>
           </div>
+
+          {/* Done button */}
+          <button
+            onClick={handleDone}
+            className={`flex flex-col items-center gap-1 ${hasClip && !isRecording ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+          >
+            <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center">
+              <svg className="h-5 w-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+              </svg>
+            </div>
+            <span className="text-white/70 text-[10px]">Done</span>
+          </button>
         </div>
       </div>
     </div>
