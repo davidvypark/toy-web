@@ -12,13 +12,30 @@ export function ContributorForm({ onSubmit }: ContributorFormProps) {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    setAvatarFile(file)
-    const url = URL.createObjectURL(file)
-    setAvatarPreview(url)
+    // Flip the selfie horizontally so it matches the camera viewfinder
+    const img = new Image()
+    img.src = URL.createObjectURL(file)
+    await new Promise(resolve => { img.onload = resolve })
+
+    const canvas = document.createElement('canvas')
+    canvas.width = img.naturalWidth
+    canvas.height = img.naturalHeight
+    const ctx = canvas.getContext('2d')!
+    ctx.scale(-1, 1)
+    ctx.drawImage(img, -canvas.width, 0, canvas.width, canvas.height)
+    URL.revokeObjectURL(img.src)
+
+    const flippedBlob = await new Promise<Blob>(r =>
+      canvas.toBlob(b => r(b!), 'image/jpeg', 0.9)
+    )
+    const flippedFile = new File([flippedBlob], 'avatar.jpg', { type: 'image/jpeg' })
+
+    setAvatarFile(flippedFile)
+    setAvatarPreview(URL.createObjectURL(flippedBlob))
   }
 
   const handleSubmit = () => {

@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
 
 interface CameraViewProps {
-  onRecorded: (blob: Blob) => void
+  onRecorded: (blob: Blob, duration: number, thumbnail: Blob) => void
   onBack: () => void
 }
 
@@ -32,6 +32,8 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
   const [error, setError] = useState<string | null>(null)
   const [hasClip, setHasClip] = useState(false)
   const [clipBlob, setClipBlob] = useState<Blob | null>(null)
+  const clipThumbnailRef = useRef<Blob | null>(null)
+  const clipDurationRef = useRef<number>(0)
 
   const stopCamera = useCallback(() => {
     if (rafRef.current) {
@@ -138,7 +140,7 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
     }
 
     recorder.onstop = () => {
-      const duration = (Date.now() - startTimeRef.current) / 1000
+      const duration = Math.round(((Date.now() - startTimeRef.current) / 1000) * 10) / 10
       if (duration < MIN_DURATION) {
         setIsRecording(false)
         setElapsed(0)
@@ -147,8 +149,25 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
       }
 
       const blob = new Blob(chunksRef.current, { type: mimeTypeRef.current })
-      setClipBlob(blob)
-      setHasClip(true)
+
+      // Capture thumbnail from the recording canvas (already has the last frame)
+      const canvas = canvasRef.current
+      const thumbCanvas = document.createElement('canvas')
+      thumbCanvas.width = 150
+      thumbCanvas.height = 200
+      if (canvas) {
+        thumbCanvas.getContext('2d')!.drawImage(canvas, 0, 0, 150, 200)
+      }
+      thumbCanvas.toBlob(
+        (thumbBlob) => {
+          clipThumbnailRef.current = thumbBlob
+          clipDurationRef.current = duration
+          setClipBlob(blob)
+          setHasClip(true)
+        },
+        'image/jpeg',
+        0.7
+      )
     }
 
     recorderRef.current = recorder
@@ -185,8 +204,8 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
   }, [])
 
   const handleDone = useCallback(() => {
-    if (clipBlob) {
-      onRecorded(clipBlob)
+    if (clipBlob && clipThumbnailRef.current) {
+      onRecorded(clipBlob, clipDurationRef.current, clipThumbnailRef.current)
     }
   }, [clipBlob, onRecorded])
 

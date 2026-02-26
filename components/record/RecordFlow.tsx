@@ -25,10 +25,14 @@ export function RecordFlow({
 }: RecordFlowProps) {
   const [step, setStep] = useState<RecordStep>('invite')
   const [videoBlob, setVideoBlob] = useState<Blob | null>(null)
+  const [videoDuration, setVideoDuration] = useState<number>(0)
+  const [videoThumbnail, setVideoThumbnail] = useState<Blob | null>(null)
   const [uploadError, setUploadError] = useState<string | null>(null)
 
-  const handleRecorded = useCallback((blob: Blob) => {
+  const handleRecorded = useCallback((blob: Blob, duration: number, thumbnail: Blob) => {
     setVideoBlob(blob)
+    setVideoDuration(duration)
+    setVideoThumbnail(thumbnail)
     setStep('review')
   }, [])
 
@@ -68,21 +72,17 @@ export function RecordFlow({
       }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase.from('participants') as any).insert({
+      const { error: participantError } = await (supabase.from('participants') as any).insert({
         card_id: card.id,
         user_id: userId,
         invite_token: crypto.randomUUID(),
         status: 'viewed',
       })
+      if (participantError) {
+        console.error('Participant insert error:', participantError)
+      }
 
-      // Step 3: Get video duration
-      const durationVideo = document.createElement('video')
-      durationVideo.src = URL.createObjectURL(videoBlob)
-      await new Promise(resolve => { durationVideo.onloadedmetadata = resolve })
-      const duration = Math.round(durationVideo.duration * 10) / 10
-      URL.revokeObjectURL(durationVideo.src)
-
-      // Step 4: Upload video to clips bucket
+      // Step 3: Upload video to clips bucket
       const clipId = crypto.randomUUID()
       const ext = videoBlob.type.includes('mp4') ? 'mov' : 'webm'
 
@@ -97,27 +97,15 @@ export function RecordFlow({
         throw new Error('Failed to upload video')
       }
 
-      // Step 5: Generate & upload thumbnail
-      const thumbVideo = document.createElement('video')
-      thumbVideo.src = URL.createObjectURL(videoBlob)
-      await new Promise(r => { thumbVideo.onloadeddata = r })
-      thumbVideo.currentTime = Math.min(1.5, duration / 2)
-      await new Promise(r => { thumbVideo.onseeked = r })
-      const canvas = document.createElement('canvas')
-      canvas.width = 150
-      canvas.height = 200
-      canvas.getContext('2d')!.drawImage(thumbVideo, 0, 0, 150, 200)
-      URL.revokeObjectURL(thumbVideo.src)
-      const thumbnailBlob = await new Promise<Blob>(r =>
-        canvas.toBlob(b => r(b!), 'image/jpeg', 0.7)
-      )
-
-      await supabase.storage
-        .from('thumbnails')
-        .upload(`${clipId}.jpg`, thumbnailBlob, {
-          contentType: 'image/jpeg',
-          cacheControl: '2592000',
-        })
+      // Step 4: Upload thumbnail (captured from canvas in CameraView)
+      if (videoThumbnail) {
+        await supabase.storage
+          .from('thumbnails')
+          .upload(`${clipId}.jpg`, videoThumbnail, {
+            contentType: 'image/jpeg',
+            cacheControl: '2592000',
+          })
+      }
 
       // Step 6: Get next order position & insert clip record
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -136,7 +124,7 @@ export function RecordFlow({
         participant_id: userId,
         video_url: `${clipId}.${ext}`,
         thumbnail_url: `${clipId}.jpg`,
-        duration_seconds: duration,
+        duration_seconds: videoDuration,
         order_position: nextPosition,
         status: 'uploaded',
       })
@@ -182,7 +170,7 @@ export function RecordFlow({
       setUploadError(error.message || 'Something went wrong. Please try again.')
       setStep('details')
     }
-  }, [videoBlob, shareToken])
+  }, [videoBlob, videoDuration, videoThumbnail, shareToken])
 
   // Step: Invite
   if (step === 'invite') {
