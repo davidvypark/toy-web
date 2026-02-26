@@ -104,11 +104,7 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
       sy = (vh - sh) / 2
     }
 
-    // Mirror horizontally for front camera
-    ctx.save()
-    ctx.scale(-1, 1)
-    ctx.drawImage(video, sx, sy, sw, sh, -CANVAS_WIDTH, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
-    ctx.restore()
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
 
     rafRef.current = requestAnimationFrame(drawFrame)
   }, [])
