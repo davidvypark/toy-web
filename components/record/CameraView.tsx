@@ -104,7 +104,11 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
       sy = (vh - sh) / 2
     }
 
-    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+    // Mirror horizontally for front camera
+    ctx.save()
+    ctx.scale(-1, 1)
+    ctx.drawImage(video, sx, sy, sw, sh, -CANVAS_WIDTH, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+    ctx.restore()
 
     rafRef.current = requestAnimationFrame(drawFrame)
   }, [])
@@ -301,7 +305,7 @@ export function CameraView({ onRecorded, onBack }: CameraViewProps) {
           autoPlay
           playsInline
           muted
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover -scale-x-100"
         />
 
         {/* Loading overlay */}
