@@ -2,6 +2,28 @@
 
 import { useRef, useState, useEffect, useCallback } from 'react'
 
+function playbackLog(event: string, data?: Record<string, unknown>) {
+  const payload = { event, data: { ...data, ts: Date.now() } }
+  console.log(`[playback] ${event}`, payload.data)
+  fetch('/api/log', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  }).catch(() => {})
+}
+
+function videoState(video: HTMLVideoElement) {
+  return {
+    readyState: video.readyState,
+    networkState: video.networkState,
+    currentTime: Math.round(video.currentTime * 100) / 100,
+    duration: Math.round((video.duration || 0) * 100) / 100,
+    paused: video.paused,
+    ended: video.ended,
+    error: video.error ? { code: video.error.code, message: video.error.message } : null,
+  }
+}
+
 interface ClipData {
   id: string
   signedVideoUrl: string
@@ -125,11 +147,13 @@ function ClipPlayer({ clips, posterUrl }: { clips: ClipData[]; posterUrl?: strin
   // Set up initial clip sources
   useEffect(() => {
     if (clips.length === 0) return
+    playbackLog('init', { totalClips: clips.length })
 
     const activeVideo = getVideoRef(0).current
     if (activeVideo) {
       activeVideo.src = clips[0].signedVideoUrl
       activeVideo.load()
+      playbackLog('load-clip', { clipIndex: 0, buffer: 'A' })
     }
 
     // Preload second clip if available
@@ -139,35 +163,57 @@ function ClipPlayer({ clips, posterUrl }: { clips: ClipData[]; posterUrl?: strin
         nextVideo.src = clips[1].signedVideoUrl
         nextVideo.preload = 'auto'
         nextVideo.load()
+        playbackLog('preload-clip', { clipIndex: 1, buffer: 'B' })
       }
     }
   }, [clips, getVideoRef])
 
-  // Handle loading state
+  // Handle loading state + diagnostic event listeners on both buffers
   useEffect(() => {
-    const video = getVideoRef(0).current
-    if (!video) return
+    const videoA = getVideoRef(0).current
+    const videoB = getVideoRef(1).current
+    if (!videoA) return
 
     const handleLoaded = () => setIsLoading(false)
     const handleError = () => { setHasError(true); setIsLoading(false) }
 
-    video.addEventListener('loadedmetadata', handleLoaded)
-    video.addEventListener('error', handleError)
+    videoA.addEventListener('loadedmetadata', handleLoaded)
+    videoA.addEventListener('error', handleError)
     const timeout = setTimeout(() => setIsLoading(false), 3000)
 
+    // Diagnostic listeners for both buffers
+    const diagnosticEvents = ['error', 'stalled', 'waiting', 'suspend', 'abort', 'emptied', 'playing', 'canplay', 'canplaythrough', 'loadeddata'] as const
+    const videos = [
+      { el: videoA, label: 'A' },
+      ...(videoB ? [{ el: videoB, label: 'B' }] : []),
+    ]
+
+    const cleanups: (() => void)[] = []
+    for (const { el, label } of videos) {
+      for (const evt of diagnosticEvents) {
+        const handler = () => {
+          playbackLog(evt, { buffer: label, ...videoState(el) })
+        }
+        el.addEventListener(evt, handler)
+        cleanups.push(() => el.removeEventListener(evt, handler))
+      }
+    }
+
     return () => {
-      video.removeEventListener('loadedmetadata', handleLoaded)
-      video.removeEventListener('error', handleError)
+      videoA.removeEventListener('loadedmetadata', handleLoaded)
+      videoA.removeEventListener('error', handleError)
       clearTimeout(timeout)
+      cleanups.forEach(fn => fn())
     }
   }, [getVideoRef])
 
   // Handle clip ended — advance to next or finish
   const handleClipEnded = useCallback(() => {
     const nextIndex = clipIndex + 1
+    playbackLog('clip-ended', { clipIndex, nextIndex, totalClips: clips.length })
 
     if (nextIndex >= clips.length) {
-      // All clips played
+      playbackLog('all-clips-finished', { totalClips: clips.length })
       setIsPlaying(false)
       setIsFinished(true)
       setVisibleContributor(null)
@@ -179,7 +225,19 @@ function ClipPlayer({ clips, posterUrl }: { clips: ClipData[]; posterUrl?: strin
     const nextVideo = getVideoRef(nextBuffer).current
 
     if (nextVideo) {
-      nextVideo.play()
+      playbackLog('swap-buffer', {
+        from: activeBuffer === 0 ? 'A' : 'B',
+        to: nextBuffer === 0 ? 'A' : 'B',
+        nextClipIndex: nextIndex,
+        ...videoState(nextVideo),
+      })
+      nextVideo.play().then(() => {
+        playbackLog('play-success', { clipIndex: nextIndex, buffer: nextBuffer === 0 ? 'A' : 'B' })
+      }).catch((err: Error) => {
+        playbackLog('play-failed', { clipIndex: nextIndex, buffer: nextBuffer === 0 ? 'A' : 'B', error: err.message })
+      })
+    } else {
+      playbackLog('swap-buffer-no-video', { nextBuffer })
     }
 
     setActiveBuffer(nextBuffer)
@@ -197,6 +255,7 @@ function ClipPlayer({ clips, posterUrl }: { clips: ClipData[]; posterUrl?: strin
         preloadVideo.src = clips[preloadIndex].signedVideoUrl
         preloadVideo.preload = 'auto'
         preloadVideo.load()
+        playbackLog('preload-clip', { clipIndex: preloadIndex, buffer: activeBuffer === 0 ? 'A' : 'B' })
       }
     }
   }, [clipIndex, clips, activeBuffer, getVideoRef])
@@ -204,7 +263,12 @@ function ClipPlayer({ clips, posterUrl }: { clips: ClipData[]; posterUrl?: strin
   const startPlayback = () => {
     const video = getVideoRef(activeBuffer).current
     if (!video) return
-    video.play()
+    playbackLog('start-playback', { clipIndex: 0, buffer: activeBuffer === 0 ? 'A' : 'B', ...videoState(video) })
+    video.play().then(() => {
+      playbackLog('play-success', { clipIndex: 0, buffer: activeBuffer === 0 ? 'A' : 'B' })
+    }).catch((err: Error) => {
+      playbackLog('play-failed', { clipIndex: 0, buffer: activeBuffer === 0 ? 'A' : 'B', error: err.message })
+    })
     setIsPlaying(true)
     setIsFinished(false)
     setVisibleContributor({
@@ -214,7 +278,7 @@ function ClipPlayer({ clips, posterUrl }: { clips: ClipData[]; posterUrl?: strin
   }
 
   const replay = () => {
-    // Reset everything
+    playbackLog('replay', { totalClips: clips.length })
     setClipIndex(0)
     setActiveBuffer(0)
     setIsFinished(false)
@@ -225,7 +289,9 @@ function ClipPlayer({ clips, posterUrl }: { clips: ClipData[]; posterUrl?: strin
     if (videoA) {
       videoA.src = clips[0].signedVideoUrl
       videoA.load()
-      videoA.play()
+      videoA.play().catch((err: Error) => {
+        playbackLog('replay-play-failed', { error: err.message })
+      })
     }
     if (videoB && clips.length > 1) {
       videoB.src = clips[1].signedVideoUrl
