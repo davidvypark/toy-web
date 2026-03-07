@@ -15,6 +15,7 @@ export interface Card {
 export interface ClipData {
   id: string
   signedVideoUrl: string
+  videoPath: string
   thumbnailUrl: string | null
   contributorName: string | null
   contributorAvatarUrl: string | null
@@ -108,11 +109,17 @@ export async function getClips(cardId: string): Promise<ClipData[]> {
     const profile = profileMap.get(clip.participant_id)
     const signedUrl = signedUrls[i]?.data?.signedUrl
 
-    if (!signedUrl) return null
+    if (!signedUrl) {
+      console.error(`[watch] Failed to sign URL for clip ${clip.id}, path: ${clip.video_url}`)
+      return null
+    }
+
+    console.log(`[watch] Clip ${i}: id=${clip.id}, path=${clip.video_url}, duration=${clip.duration_seconds}s, contributor=${clip.contributor_name ?? profile?.display_name ?? 'unknown'}`)
 
     return {
       id: clip.id,
       signedVideoUrl: signedUrl,
+      videoPath: clip.video_url,
       thumbnailUrl: clip.thumbnail_url
         ? `${supabaseUrl}/storage/v1/object/public/thumbnails/${clip.thumbnail_url}`
         : null,

@@ -27,6 +27,7 @@ function videoState(video: HTMLVideoElement) {
 interface ClipData {
   id: string
   signedVideoUrl: string
+  videoPath: string
   thumbnailUrl: string | null
   contributorName: string | null
   contributorAvatarUrl: string | null
@@ -129,6 +130,8 @@ function MontagePlayer({ videoUrl, posterUrl }: { videoUrl: string; posterUrl?: 
 function ClipPlayer({ clips, posterUrl }: { clips: ClipData[]; posterUrl?: string }) {
   const videoARef = useRef<HTMLVideoElement>(null)
   const videoBRef = useRef<HTMLVideoElement>(null)
+  const clipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const clipIndexRef = useRef(0)
 
   // Which buffer (A=0, B=1) is currently active/visible
   const [activeBuffer, setActiveBuffer] = useState<0 | 1>(0)
@@ -147,13 +150,16 @@ function ClipPlayer({ clips, posterUrl }: { clips: ClipData[]; posterUrl?: strin
   // Set up initial clip sources
   useEffect(() => {
     if (clips.length === 0) return
-    playbackLog('init', { totalClips: clips.length })
+    playbackLog('init', {
+      totalClips: clips.length,
+      clips: clips.map((c, i) => ({ i, id: c.id, path: c.videoPath, dur: c.durationSeconds, name: c.contributorName })),
+    })
 
     const activeVideo = getVideoRef(0).current
     if (activeVideo) {
       activeVideo.src = clips[0].signedVideoUrl
       activeVideo.load()
-      playbackLog('load-clip', { clipIndex: 0, buffer: 'A' })
+      playbackLog('load-clip', { clipIndex: 0, buffer: 'A', clipId: clips[0].id, path: clips[0].videoPath })
     }
 
     // Preload second clip if available
@@ -163,7 +169,7 @@ function ClipPlayer({ clips, posterUrl }: { clips: ClipData[]; posterUrl?: strin
         nextVideo.src = clips[1].signedVideoUrl
         nextVideo.preload = 'auto'
         nextVideo.load()
-        playbackLog('preload-clip', { clipIndex: 1, buffer: 'B' })
+        playbackLog('preload-clip', { clipIndex: 1, buffer: 'B', clipId: clips[1].id, path: clips[1].videoPath })
       }
     }
   }, [clips, getVideoRef])
@@ -175,10 +181,15 @@ function ClipPlayer({ clips, posterUrl }: { clips: ClipData[]; posterUrl?: strin
     if (!videoA) return
 
     const handleLoaded = () => setIsLoading(false)
-    const handleError = () => { setHasError(true); setIsLoading(false) }
+    // Only treat initial load error as fatal (before playback starts)
+    const handleInitError = () => {
+      playbackLog('init-load-error', { buffer: 'A', ...videoState(videoA) })
+      setHasError(true)
+      setIsLoading(false)
+    }
 
     videoA.addEventListener('loadedmetadata', handleLoaded)
-    videoA.addEventListener('error', handleError)
+    videoA.addEventListener('error', handleInitError)
     const timeout = setTimeout(() => setIsLoading(false), 3000)
 
     // Diagnostic listeners for both buffers
@@ -201,16 +212,23 @@ function ClipPlayer({ clips, posterUrl }: { clips: ClipData[]; posterUrl?: strin
 
     return () => {
       videoA.removeEventListener('loadedmetadata', handleLoaded)
-      videoA.removeEventListener('error', handleError)
+      videoA.removeEventListener('error', handleInitError)
       clearTimeout(timeout)
       cleanups.forEach(fn => fn())
     }
   }, [getVideoRef])
 
-  // Handle clip ended — advance to next or finish
-  const handleClipEnded = useCallback(() => {
-    const nextIndex = clipIndex + 1
-    playbackLog('clip-ended', { clipIndex, nextIndex, totalClips: clips.length })
+  // Advance to next clip (or finish). Shared by timer and onEnded fallback.
+  const advanceClip = useCallback(() => {
+    // Clear any pending timer
+    if (clipTimerRef.current) {
+      clearTimeout(clipTimerRef.current)
+      clipTimerRef.current = null
+    }
+
+    const currentIdx = clipIndexRef.current
+    const nextIndex = currentIdx + 1
+    playbackLog('clip-ended', { clipIndex: currentIdx, nextIndex, totalClips: clips.length })
 
     if (nextIndex >= clips.length) {
       playbackLog('all-clips-finished', { totalClips: clips.length })
@@ -220,21 +238,60 @@ function ClipPlayer({ clips, posterUrl }: { clips: ClipData[]; posterUrl?: strin
       return
     }
 
-    // Swap buffers
-    const nextBuffer = activeBuffer === 0 ? 1 : 0 as 0 | 1
+    // Determine buffers
+    const currentBuffer: 0 | 1 = currentIdx % 2 === 0 ? 0 : 1
+    const nextBuffer: 0 | 1 = currentBuffer === 0 ? 1 : 0
     const nextVideo = getVideoRef(nextBuffer).current
+
+    // Pause current video
+    const currentVideo = getVideoRef(currentBuffer).current
+    if (currentVideo) {
+      currentVideo.pause()
+    }
 
     if (nextVideo) {
       playbackLog('swap-buffer', {
-        from: activeBuffer === 0 ? 'A' : 'B',
+        from: currentBuffer === 0 ? 'A' : 'B',
         to: nextBuffer === 0 ? 'A' : 'B',
         nextClipIndex: nextIndex,
         ...videoState(nextVideo),
       })
+
+      // Check if next video is in an error state — skip it
+      if (nextVideo.error) {
+        playbackLog('skip-broken-clip', {
+          clipIndex: nextIndex,
+          buffer: nextBuffer === 0 ? 'A' : 'B',
+          error: { code: nextVideo.error.code, message: nextVideo.error.message },
+        })
+        // Update state so the next advanceClip call uses the right index
+        clipIndexRef.current = nextIndex
+        setClipIndex(nextIndex)
+        setActiveBuffer(nextBuffer)
+        // Preload what would be the next-next clip into the old buffer, then skip
+        const preloadIndex = nextIndex + 1
+        if (preloadIndex < clips.length) {
+          if (currentVideo) {
+            currentVideo.src = clips[preloadIndex].signedVideoUrl
+            currentVideo.preload = 'auto'
+            currentVideo.load()
+            playbackLog('preload-clip', { clipIndex: preloadIndex, buffer: currentBuffer === 0 ? 'A' : 'B' })
+          }
+        }
+        // Immediately advance past the broken clip
+        setTimeout(() => advanceClip(), 0)
+        return
+      }
+
       nextVideo.play().then(() => {
         playbackLog('play-success', { clipIndex: nextIndex, buffer: nextBuffer === 0 ? 'A' : 'B' })
       }).catch((err: Error) => {
         playbackLog('play-failed', { clipIndex: nextIndex, buffer: nextBuffer === 0 ? 'A' : 'B', error: err.message })
+        // Skip this clip if play fails
+        clipIndexRef.current = nextIndex
+        setClipIndex(nextIndex)
+        setActiveBuffer(nextBuffer)
+        setTimeout(() => advanceClip(), 0)
       })
     } else {
       playbackLog('swap-buffer-no-video', { nextBuffer })
@@ -242,23 +299,46 @@ function ClipPlayer({ clips, posterUrl }: { clips: ClipData[]; posterUrl?: strin
 
     setActiveBuffer(nextBuffer)
     setClipIndex(nextIndex)
+    clipIndexRef.current = nextIndex
     setVisibleContributor({
       name: clips[nextIndex].contributorName,
       avatarUrl: clips[nextIndex].contributorAvatarUrl,
     })
 
+    // Start timer for this clip using DB duration
+    const dbDuration = clips[nextIndex].durationSeconds
+    if (dbDuration && dbDuration > 0) {
+      clipTimerRef.current = setTimeout(() => {
+        playbackLog('clip-timer-fired', { clipIndex: nextIndex, dbDuration })
+        advanceClip()
+      }, dbDuration * 1000 + 200) // +200ms buffer to let onEnded fire first if it can
+    }
+
     // Preload the clip after next
     const preloadIndex = nextIndex + 1
     if (preloadIndex < clips.length) {
-      const preloadVideo = getVideoRef(activeBuffer).current // reuse the old active buffer
-      if (preloadVideo) {
-        preloadVideo.src = clips[preloadIndex].signedVideoUrl
-        preloadVideo.preload = 'auto'
-        preloadVideo.load()
-        playbackLog('preload-clip', { clipIndex: preloadIndex, buffer: activeBuffer === 0 ? 'A' : 'B' })
+      if (currentVideo) {
+        currentVideo.src = clips[preloadIndex].signedVideoUrl
+        currentVideo.preload = 'auto'
+        currentVideo.load()
+        playbackLog('preload-clip', { clipIndex: preloadIndex, buffer: currentBuffer === 0 ? 'A' : 'B' })
       }
     }
-  }, [clipIndex, clips, activeBuffer, getVideoRef])
+  }, [clips, getVideoRef])
+
+  // Keep ref in sync so advanceClip always has the latest index
+  useEffect(() => {
+    clipIndexRef.current = clipIndex
+  }, [clipIndex])
+
+  // onEnded handler — clear timer and advance (prevents double-advance)
+  const handleClipEnded = useCallback(() => {
+    if (clipTimerRef.current) {
+      clearTimeout(clipTimerRef.current)
+      clipTimerRef.current = null
+    }
+    advanceClip()
+  }, [advanceClip])
 
   const startPlayback = () => {
     const video = getVideoRef(activeBuffer).current
@@ -271,17 +351,32 @@ function ClipPlayer({ clips, posterUrl }: { clips: ClipData[]; posterUrl?: strin
     })
     setIsPlaying(true)
     setIsFinished(false)
+    clipIndexRef.current = 0
     setVisibleContributor({
       name: clips[0].contributorName,
       avatarUrl: clips[0].contributorAvatarUrl,
     })
+
+    // Start timer for first clip using DB duration
+    const dbDuration = clips[0].durationSeconds
+    if (dbDuration && dbDuration > 0) {
+      clipTimerRef.current = setTimeout(() => {
+        playbackLog('clip-timer-fired', { clipIndex: 0, dbDuration })
+        advanceClip()
+      }, dbDuration * 1000 + 200)
+    }
   }
 
   const replay = () => {
     playbackLog('replay', { totalClips: clips.length })
+    if (clipTimerRef.current) {
+      clearTimeout(clipTimerRef.current)
+      clipTimerRef.current = null
+    }
     setClipIndex(0)
     setActiveBuffer(0)
     setIsFinished(false)
+    clipIndexRef.current = 0
 
     const videoA = getVideoRef(0).current
     const videoB = getVideoRef(1).current
@@ -304,6 +399,15 @@ function ClipPlayer({ clips, posterUrl }: { clips: ClipData[]; posterUrl?: strin
       name: clips[0].contributorName,
       avatarUrl: clips[0].contributorAvatarUrl,
     })
+
+    // Start timer for first clip
+    const dbDuration = clips[0].durationSeconds
+    if (dbDuration && dbDuration > 0) {
+      clipTimerRef.current = setTimeout(() => {
+        playbackLog('clip-timer-fired', { clipIndex: 0, dbDuration })
+        advanceClip()
+      }, dbDuration * 1000 + 200)
+    }
   }
 
   const togglePlayPause = () => {
@@ -323,8 +427,20 @@ function ClipPlayer({ clips, posterUrl }: { clips: ClipData[]; posterUrl?: strin
     } else {
       video.pause()
       setIsPlaying(false)
+      // Pause the timer too
+      if (clipTimerRef.current) {
+        clearTimeout(clipTimerRef.current)
+        clipTimerRef.current = null
+      }
     }
   }
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (clipTimerRef.current) clearTimeout(clipTimerRef.current)
+    }
+  }, [])
 
   if (hasError) return <ErrorState />
 
