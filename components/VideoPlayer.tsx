@@ -132,6 +132,7 @@ function ClipPlayer({ clips, posterUrl }: { clips: ClipData[]; posterUrl?: strin
   const videoBRef = useRef<HTMLVideoElement>(null)
   const clipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const clipIndexRef = useRef(0)
+  const playbackStartedRef = useRef(false)
 
   // Which buffer (A=0, B=1) is currently active/visible
   const [activeBuffer, setActiveBuffer] = useState<0 | 1>(0)
@@ -183,7 +184,12 @@ function ClipPlayer({ clips, posterUrl }: { clips: ClipData[]; posterUrl?: strin
     const handleLoaded = () => setIsLoading(false)
     // Only treat initial load error as fatal (before playback starts)
     const handleInitError = () => {
+      if (playbackStartedRef.current) return // ignore preload errors during playback
       playbackLog('init-load-error', { buffer: 'A', ...videoState(videoA) })
+      if (clipTimerRef.current) {
+        clearTimeout(clipTimerRef.current)
+        clipTimerRef.current = null
+      }
       setHasError(true)
       setIsLoading(false)
     }
@@ -343,6 +349,7 @@ function ClipPlayer({ clips, posterUrl }: { clips: ClipData[]; posterUrl?: strin
   const startPlayback = () => {
     const video = getVideoRef(activeBuffer).current
     if (!video) return
+    playbackStartedRef.current = true
     playbackLog('start-playback', { clipIndex: 0, buffer: activeBuffer === 0 ? 'A' : 'B', ...videoState(video) })
     video.play().then(() => {
       playbackLog('play-success', { clipIndex: 0, buffer: activeBuffer === 0 ? 'A' : 'B' })
@@ -368,6 +375,7 @@ function ClipPlayer({ clips, posterUrl }: { clips: ClipData[]; posterUrl?: strin
   }
 
   const replay = () => {
+    playbackStartedRef.current = true
     playbackLog('replay', { totalClips: clips.length })
     if (clipTimerRef.current) {
       clearTimeout(clipTimerRef.current)
